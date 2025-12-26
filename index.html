@@ -247,20 +247,52 @@
 
         let currentLocation = "austin";
 
+        // Get timezone offset in hours for a given timezone
+        function getTimezoneOffset(timezone) {
+            const now = new Date();
+            const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            return (tzDate - utcDate) / (1000 * 60 * 60);
+        }
+
+        // Get the current date components in a specific timezone
+        function getDateInTimezone(date, timezone) {
+            const options = { timeZone: timezone, year: 'numeric', month: 'numeric', day: 'numeric', 
+                             hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false };
+            const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+            const get = (type) => parseInt(parts.find(p => p.type === type)?.value || 0);
+            return {
+                year: get('year'),
+                month: get('month'),
+                day: get('day'),
+                hour: get('hour') === 24 ? 0 : get('hour'),
+                minute: get('minute'),
+                second: get('second'),
+                dayOfWeek: new Date(get('year'), get('month') - 1, get('day')).getDay()
+            };
+        }
+
         // Calculate sunrise and sunset using astronomical formulas
-        function calculateSunTimes(lat, lng, date) {
+        function calculateSunTimes(lat, lng, year, month, day) {
             const rad = Math.PI / 180;
-            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            const date = new Date(year, month - 1, day);
+            const dayOfYear = Math.floor((date - new Date(year, 0, 0)) / 86400000);
             
             // Solar declination
             const declination = -23.45 * Math.cos(rad * 360 / 365 * (dayOfYear + 10));
             
-            // Hour angle
-            const cosHourAngle = -Math.tan(lat * rad) * Math.tan(declination * rad);
+            // Hour angle for sunrise/sunset (with refraction correction)
+            const h = -0.833; // Standard refraction
+            const cosHourAngle = (Math.sin(h * rad) - Math.sin(lat * rad) * Math.sin(declination * rad)) / 
+                                 (Math.cos(lat * rad) * Math.cos(declination * rad));
             const hourAngle = Math.acos(Math.max(-1, Math.min(1, cosHourAngle))) / rad;
             
-            // Solar noon (approximate)
-            const solarNoon = 12 - lng / 15;
+            // Equation of time (approximate)
+            const B = 360/365 * (dayOfYear - 81) * rad;
+            const EoT = 9.87 * Math.sin(2*B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+            
+            // Solar noon in local standard time (LST)
+            const solarNoon = 12 - lng / 15 - EoT / 60;
             
             // Sunrise and sunset in hours (UTC)
             const sunriseUTC = solarNoon - hourAngle / 15;
@@ -269,49 +301,74 @@
             return { sunrise: sunriseUTC, sunset: sunsetUTC };
         }
 
-        // Get local time from UTC hours
-        function utcHoursToLocal(utcHours, timezone, date) {
-            const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 
-                Math.floor(utcHours), (utcHours % 1) * 60));
-            return new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+        // Convert UTC hours to a time object {hour, minute} in local timezone
+        function utcHoursToLocalTime(utcHours, tzOffset) {
+            let localHours = utcHours + tzOffset;
+            // Handle day overflow
+            if (localHours >= 24) localHours -= 24;
+            if (localHours < 0) localHours += 24;
+            
+            const hour = Math.floor(localHours);
+            const minute = Math.round((localHours - hour) * 60);
+            return { hour, minute };
         }
 
-        // Format time as HH:MM AM/PM
-        function formatTime(date) {
-            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        // Format time object as HH:MM AM/PM
+        function formatTimeObj(timeObj) {
+            const hour = timeObj.hour;
+            const minute = timeObj.minute;
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
         }
 
-        // Get day of week (0 = Sunday)
-        function getDayOfWeek(date, timezone) {
-            const localDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-            return localDate.getDay();
+        // Convert time object to minutes since midnight
+        function timeObjToMinutes(timeObj) {
+            return timeObj.hour * 60 + timeObj.minute;
+        }
+
+        // Add minutes to time object
+        function addMinutesToTime(timeObj, minutes) {
+            let totalMinutes = timeObj.hour * 60 + timeObj.minute + minutes;
+            if (totalMinutes >= 24 * 60) totalMinutes -= 24 * 60;
+            if (totalMinutes < 0) totalMinutes += 24 * 60;
+            return {
+                hour: Math.floor(totalMinutes / 60),
+                minute: Math.round(totalMinutes % 60)
+            };
         }
 
         // Calculate hora schedule
-        function calculateHoraSchedule(location, date) {
+        function calculateHoraSchedule(location) {
             const loc = LOCATIONS[location];
-            const sunTimes = calculateSunTimes(loc.lat, loc.lng, date);
+            const now = new Date();
+            const tzOffset = getTimezoneOffset(loc.tz);
+            const localDate = getDateInTimezone(now, loc.tz);
             
-            // Convert to local time
-            const sunrise = utcHoursToLocal(sunTimes.sunrise, loc.tz, date);
-            const sunset = utcHoursToLocal(sunTimes.sunset, loc.tz, date);
+            // Calculate sun times for today
+            const sunTimes = calculateSunTimes(loc.lat, loc.lng, localDate.year, localDate.month, localDate.day);
+            const sunrise = utcHoursToLocalTime(sunTimes.sunrise, tzOffset);
+            const sunset = utcHoursToLocalTime(sunTimes.sunset, tzOffset);
             
-            // Next day sunrise for night horas
-            const nextDate = new Date(date);
-            nextDate.setDate(nextDate.getDate() + 1);
-            const nextSunTimes = calculateSunTimes(loc.lat, loc.lng, nextDate);
-            const nextSunrise = utcHoursToLocal(nextSunTimes.sunrise, loc.tz, nextDate);
+            // Calculate sun times for tomorrow (for next sunrise)
+            const tomorrow = new Date(localDate.year, localDate.month - 1, localDate.day + 1);
+            const tomorrowParts = getDateInTimezone(tomorrow, loc.tz);
+            const nextSunTimes = calculateSunTimes(loc.lat, loc.lng, tomorrowParts.year, tomorrowParts.month, tomorrowParts.day);
+            const nextSunrise = utcHoursToLocalTime(nextSunTimes.sunrise, tzOffset);
             
-            // Day and night duration in milliseconds
-            const dayDuration = sunset - sunrise;
-            const nightDuration = nextSunrise - sunset;
+            // Day duration in minutes
+            let dayDuration = timeObjToMinutes(sunset) - timeObjToMinutes(sunrise);
+            if (dayDuration < 0) dayDuration += 24 * 60;
             
-            // Each hora duration
+            // Night duration in minutes (sunset to next sunrise)
+            let nightDuration = (24 * 60 - timeObjToMinutes(sunset)) + timeObjToMinutes(nextSunrise);
+            
+            // Each hora duration in minutes
             const dayHoraDuration = dayDuration / 12;
             const nightHoraDuration = nightDuration / 12;
             
             // Determine starting planet based on day of week
-            const dayOfWeek = getDayOfWeek(date, loc.tz);
+            const dayOfWeek = localDate.dayOfWeek;
             const dayRuler = DAY_RULERS[dayOfWeek];
             const startIndex = HORA_SEQUENCE.indexOf(dayRuler);
             
@@ -321,16 +378,16 @@
             for (let i = 0; i < 12; i++) {
                 const planetIndex = (startIndex + i) % 7;
                 const planet = HORA_SEQUENCE[planetIndex];
-                const start = new Date(sunrise.getTime() + i * dayHoraDuration);
-                const end = new Date(sunrise.getTime() + (i + 1) * dayHoraDuration);
+                const start = addMinutesToTime(sunrise, i * dayHoraDuration);
+                const end = addMinutesToTime(sunrise, (i + 1) * dayHoraDuration);
                 
                 schedule.push({
                     planet,
                     ...PLANETS[planet],
-                    start: formatTime(start),
-                    end: formatTime(end),
-                    startTime: start,
-                    endTime: end,
+                    start: formatTimeObj(start),
+                    end: formatTimeObj(end),
+                    startMinutes: timeObjToMinutes(start),
+                    endMinutes: timeObjToMinutes(end),
                     isDay: true
                 });
             }
@@ -339,36 +396,49 @@
             for (let i = 0; i < 12; i++) {
                 const planetIndex = (startIndex + 12 + i) % 7;
                 const planet = HORA_SEQUENCE[planetIndex];
-                const start = new Date(sunset.getTime() + i * nightHoraDuration);
-                const end = new Date(sunset.getTime() + (i + 1) * nightHoraDuration);
+                const start = addMinutesToTime(sunset, i * nightHoraDuration);
+                const end = addMinutesToTime(sunset, (i + 1) * nightHoraDuration);
+                
+                let startMins = timeObjToMinutes(start);
+                let endMins = timeObjToMinutes(end);
+                // Handle overnight times
+                if (startMins < timeObjToMinutes(sunset)) startMins += 24 * 60;
+                if (endMins < timeObjToMinutes(sunset)) endMins += 24 * 60;
+                if (endMins <= startMins) endMins += 24 * 60;
                 
                 schedule.push({
                     planet,
                     ...PLANETS[planet],
-                    start: formatTime(start),
-                    end: formatTime(end),
-                    startTime: start,
-                    endTime: end,
+                    start: formatTimeObj(start),
+                    end: formatTimeObj(end),
+                    startMinutes: startMins,
+                    endMinutes: endMins,
                     isDay: false
                 });
             }
             
             return {
                 location: loc.name,
-                sunrise: formatTime(sunrise),
-                sunset: formatTime(sunset),
+                sunrise: formatTimeObj(sunrise),
+                sunset: formatTimeObj(sunset),
+                localDate: localDate,
                 schedule
             };
         }
 
         // Find current hora
-        function findCurrentHora(schedule, timezone) {
-            const now = new Date();
-            const localNow = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+        function findCurrentHora(schedule, localDate, sunset) {
+            let currentMinutes = localDate.hour * 60 + localDate.minute;
+            
+            // If after sunset, add 24*60 for comparison
+            const sunsetMinutes = schedule.find(h => !h.isDay)?.startMinutes || 0;
+            if (currentMinutes < 6 * 60) { // If before 6 AM, it's probably night from previous day
+                currentMinutes += 24 * 60;
+            }
             
             for (let i = 0; i < schedule.length; i++) {
                 const hora = schedule[i];
-                if (localNow >= hora.startTime && localNow < hora.endTime) {
+                if (currentMinutes >= hora.startMinutes && currentMinutes < hora.endMinutes) {
                     return { current: hora, index: i, next: schedule[i + 1] || schedule[0] };
                 }
             }
@@ -379,16 +449,15 @@
         function render() {
             const loc = LOCATIONS[currentLocation];
             const now = new Date();
-            const localNow = new Date(now.toLocaleString('en-US', { timeZone: loc.tz }));
             
-            // Update header
+            // Update header with proper timezone display
             document.getElementById('location-display').textContent = `📍 ${loc.name}`;
             document.getElementById('datetime-display').textContent = 
-                `📅 ${localNow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${localNow.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}`;
+                `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}`;
             
             // Calculate schedule
-            const data = calculateHoraSchedule(currentLocation, now);
-            const { current, index, next } = findCurrentHora(data.schedule, loc.tz);
+            const data = calculateHoraSchedule(currentLocation);
+            const { current, index, next } = findCurrentHora(data.schedule, data.localDate, data.sunset);
             
             // Jupiter horas
             const jupiterHoras = data.schedule.filter(h => h.planet === 'Jupiter');
