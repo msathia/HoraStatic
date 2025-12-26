@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕉️ Hora Calculator - Vedic Planetary Hours</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header .subtitle { color: #94a3b8; font-size: 1em; margin-bottom: 15px; }
+        .header .location { color: #fbbf24; font-size: 1.2em; }
+        .header .time { color: #94a3b8; margin-top: 10px; }
+        
+        .location-select {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        .location-select label { font-weight: 500; }
+        .location-select select {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1em;
+            font-family: inherit;
+            background: #fff;
+            color: #1a1a2e;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        
+        .current-hora {
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .current-hora.good { background: #d1fae5; border-left: 6px solid #10b981; }
+        .current-hora.avoid { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .current-hora.neutral { background: #fef3c7; border-left: 6px solid #f59e0b; }
+        .current-hora { color: #1a1a2e; }
+        .current-hora .planet { font-size: 3em; margin-bottom: 10px; }
+        .current-hora .name { font-size: 1.8em; font-weight: 600; }
+        .current-hora.good .name { color: #10b981; }
+        .current-hora.avoid .name { color: #ef4444; }
+        .current-hora.neutral .name { color: #f59e0b; }
+        .current-hora .time-range { font-size: 1.2em; color: #64748b; margin: 10px 0; }
+        .current-hora .quality { 
+            display: inline-block;
+            padding: 8px 20px;
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .current-hora.good .quality { background: #10b981; }
+        .current-hora.avoid .quality { background: #ef4444; }
+        .current-hora.neutral .quality { background: #f59e0b; }
+        
+        .jupiter-box {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1a1a2e;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .jupiter-box h2 { margin-bottom: 15px; }
+        .jupiter-box ul { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
+        .jupiter-box li { 
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .schedule {
+            background: rgba(255,255,255,0.95);
+            color: #1a1a2e;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .schedule h2 { 
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #1a1a2e; color: white; font-weight: 500; }
+        tr.good { background: #d1fae5; }
+        tr.avoid { background: #fee2e2; }
+        tr.neutral { background: #fef3c7; }
+        tr.current { outline: 3px solid #3b82f6; outline-offset: -3px; }
+        
+        .legend {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+        .legend span { margin: 0 15px; }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        .footer a { color: #fbbf24; text-decoration: none; }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #94a3b8;
+        }
+        .loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .current-hora .planet { font-size: 2em; }
+            .current-hora .name { font-size: 1.4em; }
+            th, td { padding: 8px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕉️ Hora Calculator</h1>
+            <div class="subtitle">Vedic Planetary Hours - Calculated Locally</div>
+            <div class="location" id="location-display">📍 Loading...</div>
+            <div class="time" id="datetime-display">📅 Loading...</div>
+        </div>
+        
+        <div class="location-select">
+            <label for="city-select">Select Location:</label>
+            <select id="city-select" onchange="changeLocation()">
+                <option value="austin">Austin, TX</option>
+                <option value="houston">Houston, TX</option>
+                <option value="dallas">Dallas, TX</option>
+                <option value="san_antonio">San Antonio, TX</option>
+                <option value="new_york">New York, NY</option>
+                <option value="los_angeles">Los Angeles, CA</option>
+                <option value="chicago">Chicago, IL</option>
+                <option value="san_francisco">San Francisco, CA</option>
+                <option value="chennai">Chennai, India</option>
+                <option value="mumbai">Mumbai, India</option>
+                <option value="bangalore">Bangalore, India</option>
+                <option value="delhi">Delhi, India</option>
+                <option value="hyderabad">Hyderabad, India</option>
+                <option value="kolkata">Kolkata, India</option>
+                <option value="london">London, UK</option>
+                <option value="singapore">Singapore</option>
+                <option value="sydney">Sydney, Australia</option>
+            </select>
+        </div>
+        
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Calculating hora times...</p>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <span style="color: #10b981;">✓ Good (Jupiter, Venus, Mercury, Moon)</span>
+            <span style="color: #f59e0b;">~ Neutral (Sun)</span>
+            <span style="color: #ef4444;">✗ Avoid (Mars, Saturn)</span>
+        </div>
+        
+        <div class="footer">
+            Pure JavaScript calculation - No backend required<br>
+            <a href="https://github.com/msathia/HoraStatic" target="_blank">View on GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        // Location data with coordinates
+        const LOCATIONS = {
+            austin: { name: "Austin, TX", lat: 30.2672, lng: -97.7431, tz: "America/Chicago" },
+            houston: { name: "Houston, TX", lat: 29.7604, lng: -95.3698, tz: "America/Chicago" },
+            dallas: { name: "Dallas, TX", lat: 32.7767, lng: -96.7970, tz: "America/Chicago" },
+            san_antonio: { name: "San Antonio, TX", lat: 29.4241, lng: -98.4936, tz: "America/Chicago" },
+            new_york: { name: "New York, NY", lat: 40.7128, lng: -74.0060, tz: "America/New_York" },
+            los_angeles: { name: "Los Angeles, CA", lat: 34.0522, lng: -118.2437, tz: "America/Los_Angeles" },
+            chicago: { name: "Chicago, IL", lat: 41.8781, lng: -87.6298, tz: "America/Chicago" },
+            san_francisco: { name: "San Francisco, CA", lat: 37.7749, lng: -122.4194, tz: "America/Los_Angeles" },
+            chennai: { name: "Chennai, India", lat: 13.0827, lng: 80.2707, tz: "Asia/Kolkata" },
+            mumbai: { name: "Mumbai, India", lat: 19.0760, lng: 72.8777, tz: "Asia/Kolkata" },
+            bangalore: { name: "Bangalore, India", lat: 12.9716, lng: 77.5946, tz: "Asia/Kolkata" },
+            delhi: { name: "Delhi, India", lat: 28.6139, lng: 77.2090, tz: "Asia/Kolkata" },
+            hyderabad: { name: "Hyderabad, India", lat: 17.3850, lng: 78.4867, tz: "Asia/Kolkata" },
+            kolkata: { name: "Kolkata, India", lat: 22.5726, lng: 88.3639, tz: "Asia/Kolkata" },
+            london: { name: "London, UK", lat: 51.5074, lng: -0.1278, tz: "Europe/London" },
+            singapore: { name: "Singapore", lat: 1.3521, lng: 103.8198, tz: "Asia/Singapore" },
+            sydney: { name: "Sydney, Australia", lat: -33.8688, lng: 151.2093, tz: "Australia/Sydney" }
+        };
+
+        // Planet data
+        const PLANETS = {
+            Sun: { emoji: "☀️", nature: "Vigorous", quality: "neutral" },
+            Moon: { emoji: "🌙", nature: "Gentle", quality: "good" },
+            Mars: { emoji: "♂️", nature: "Aggressive", quality: "avoid" },
+            Mercury: { emoji: "☿", nature: "Quick", quality: "good" },
+            Jupiter: { emoji: "♃", nature: "Fruitful", quality: "good" },
+            Venus: { emoji: "♀️", nature: "Beneficial", quality: "good" },
+            Saturn: { emoji: "♄", nature: "Sluggish", quality: "avoid" }
+        };
+
+        // Day rulers and hora sequence
+        const DAY_RULERS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+        const HORA_SEQUENCE = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"];
+
+        let currentLocation = "austin";
+
+        // Calculate sunrise and sunset using astronomical formulas
+        function calculateSunTimes(lat, lng, date) {
+            const rad = Math.PI / 180;
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            
+            // Solar declination
+            const declination = -23.45 * Math.cos(rad * 360 / 365 * (dayOfYear + 10));
+            
+            // Hour angle
+            const cosHourAngle = -Math.tan(lat * rad) * Math.tan(declination * rad);
+            const hourAngle = Math.acos(Math.max(-1, Math.min(1, cosHourAngle))) / rad;
+            
+            // Solar noon (approximate)
+            const solarNoon = 12 - lng / 15;
+            
+            // Sunrise and sunset in hours (UTC)
+            const sunriseUTC = solarNoon - hourAngle / 15;
+            const sunsetUTC = solarNoon + hourAngle / 15;
+            
+            return { sunrise: sunriseUTC, sunset: sunsetUTC };
+        }
+
+        // Get local time from UTC hours
+        function utcHoursToLocal(utcHours, timezone, date) {
+            const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 
+                Math.floor(utcHours), (utcHours % 1) * 60));
+            return new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+        }
+
+        // Format time as HH:MM AM/PM
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        // Get day of week (0 = Sunday)
+        function getDayOfWeek(date, timezone) {
+            const localDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+            return localDate.getDay();
+        }
+
+        // Calculate hora schedule
+        function calculateHoraSchedule(location, date) {
+            const loc = LOCATIONS[location];
+            const sunTimes = calculateSunTimes(loc.lat, loc.lng, date);
+            
+            // Convert to local time
+            const sunrise = utcHoursToLocal(sunTimes.sunrise, loc.tz, date);
+            const sunset = utcHoursToLocal(sunTimes.sunset, loc.tz, date);
+            
+            // Next day sunrise for night horas
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextSunTimes = calculateSunTimes(loc.lat, loc.lng, nextDate);
+            const nextSunrise = utcHoursToLocal(nextSunTimes.sunrise, loc.tz, nextDate);
+            
+            // Day and night duration in milliseconds
+            const dayDuration = sunset - sunrise;
+            const nightDuration = nextSunrise - sunset;
+            
+            // Each hora duration
+            const dayHoraDuration = dayDuration / 12;
+            const nightHoraDuration = nightDuration / 12;
+            
+            // Determine starting planet based on day of week
+            const dayOfWeek = getDayOfWeek(date, loc.tz);
+            const dayRuler = DAY_RULERS[dayOfWeek];
+            const startIndex = HORA_SEQUENCE.indexOf(dayRuler);
+            
+            const schedule = [];
+            
+            // Day horas (12)
+            for (let i = 0; i < 12; i++) {
+                const planetIndex = (startIndex + i) % 7;
+                const planet = HORA_SEQUENCE[planetIndex];
+                const start = new Date(sunrise.getTime() + i * dayHoraDuration);
+                const end = new Date(sunrise.getTime() + (i + 1) * dayHoraDuration);
+                
+                schedule.push({
+                    planet,
+                    ...PLANETS[planet],
+                    start: formatTime(start),
+                    end: formatTime(end),
+                    startTime: start,
+                    endTime: end,
+                    isDay: true
+                });
+            }
+            
+            // Night horas (12) - continue from where day left off
+            for (let i = 0; i < 12; i++) {
+                const planetIndex = (startIndex + 12 + i) % 7;
+                const planet = HORA_SEQUENCE[planetIndex];
+                const start = new Date(sunset.getTime() + i * nightHoraDuration);
+                const end = new Date(sunset.getTime() + (i + 1) * nightHoraDuration);
+                
+                schedule.push({
+                    planet,
+                    ...PLANETS[planet],
+                    start: formatTime(start),
+                    end: formatTime(end),
+                    startTime: start,
+                    endTime: end,
+                    isDay: false
+                });
+            }
+            
+            return {
+                location: loc.name,
+                sunrise: formatTime(sunrise),
+                sunset: formatTime(sunset),
+                schedule
+            };
+        }
+
+        // Find current hora
+        function findCurrentHora(schedule, timezone) {
+            const now = new Date();
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            
+            for (let i = 0; i < schedule.length; i++) {
+                const hora = schedule[i];
+                if (localNow >= hora.startTime && localNow < hora.endTime) {
+                    return { current: hora, index: i, next: schedule[i + 1] || schedule[0] };
+                }
+            }
+            return { current: schedule[0], index: 0, next: schedule[1] };
+        }
+
+        // Render the page
+        function render() {
+            const loc = LOCATIONS[currentLocation];
+            const now = new Date();
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: loc.tz }));
+            
+            // Update header
+            document.getElementById('location-display').textContent = `📍 ${loc.name}`;
+            document.getElementById('datetime-display').textContent = 
+                `📅 ${localNow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${localNow.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}`;
+            
+            // Calculate schedule
+            const data = calculateHoraSchedule(currentLocation, now);
+            const { current, index, next } = findCurrentHora(data.schedule, loc.tz);
+            
+            // Jupiter horas
+            const jupiterHoras = data.schedule.filter(h => h.planet === 'Jupiter');
+            
+            // Generate HTML
+            let html = `
+                <div class="current-hora ${current.quality}">
+                    <div class="planet">${current.emoji}</div>
+                    <div class="name">${current.planet} Hora</div>
+                    <div class="time-range">${current.start} - ${current.end}</div>
+                    <div class="quality">${current.quality === 'good' ? '✅ Auspicious' : current.quality === 'avoid' ? '⚠️ Avoid' : '🔸 Neutral'}</div>
+                    ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} (${next.start})</p>` : ''}
+                </div>
+                
+                <div class="jupiter-box">
+                    <h2>♃ Jupiter Hora Times (Most Auspicious)</h2>
+                    <ul>
+                        ${jupiterHoras.map(h => `<li>${h.start} - ${h.end}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="schedule">
+                    <h2>☀️ Day Hora (Sunrise ${data.sunrise} → Sunset ${data.sunset})</h2>
+                    <table>
+                        <thead><tr><th>#</th><th>Planet</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${data.schedule.slice(0, 12).map((h, i) => `
+                                <tr class="${h.quality} ${i === index ? 'current' : ''}">
+                                    <td>${i + 1}</td>
+                                    <td>${h.emoji} ${h.planet}</td>
+                                    <td>${h.start} - ${h.end}</td>
+                                    <td>${h.nature}</td>
+                                    <td style="font-weight: bold;">${h.quality === 'good' ? '✓' : h.quality === 'avoid' ? '✗' : '~'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="schedule">
+                    <h2>🌙 Night Hora (Sunset → Next Sunrise)</h2>
+                    <table>
+                        <thead><tr><th>#</th><th>Planet</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${data.schedule.slice(12).map((h, i) => `
+                                <tr class="${h.quality} ${i + 12 === index ? 'current' : ''}">
+                                    <td>${i + 1}</td>
+                                    <td>${h.emoji} ${h.planet}</td>
+                                    <td>${h.start} - ${h.end}</td>
+                                    <td>${h.nature}</td>
+                                    <td style="font-weight: bold;">${h.quality === 'good' ? '✓' : h.quality === 'avoid' ? '✗' : '~'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function changeLocation() {
+            currentLocation = document.getElementById('city-select').value;
+            render();
+        }
+
+        // Initial render
+        render();
+        
+        // Update every minute
+        setInterval(render, 60000);
+    </script>
+</body>
+</html>
+
