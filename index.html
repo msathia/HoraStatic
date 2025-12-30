@@ -912,9 +912,11 @@
 
         // ==================== PANCHANG CALCULATIONS ====================
         
-        // Tamil weekday names
+        // Tamil weekday names with Sanskrit equivalents (Vara)
         const TAMIL_DAYS = ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி'];
         const ENGLISH_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const SANSKRIT_DAYS = ['பானு', 'இந்து', 'பௌம', 'சௌம்ய', 'குரு', 'ப்ருகு', 'ஸ்திர'];
+        const SANSKRIT_DAYS_ENG = ['Bhanu', 'Indu', 'Bhauma', 'Saumya', 'Guru', 'Bhrigu', 'Sthira'];
         
         // Tithi names (15 for each paksha)
         const TITHIS = [
@@ -997,20 +999,20 @@
             { tamil: 'வைத்ருதி', english: 'Vaidhriti' }
         ];
         
-        // Tamil Months
+        // Tamil Months with Sanskrit equivalents
         const TAMIL_MONTHS = [
-            { tamil: 'சித்திரை', english: 'Chithirai', sanskrit: 'Mesha' },
-            { tamil: 'வைகாசி', english: 'Vaikasi', sanskrit: 'Vrishabha' },
-            { tamil: 'ஆனி', english: 'Aani', sanskrit: 'Mithuna' },
-            { tamil: 'ஆடி', english: 'Aadi', sanskrit: 'Kataka' },
-            { tamil: 'ஆவணி', english: 'Aavani', sanskrit: 'Simha' },
-            { tamil: 'புரட்டாசி', english: 'Purattasi', sanskrit: 'Kanya' },
-            { tamil: 'ஐப்பசி', english: 'Aippasi', sanskrit: 'Tula' },
-            { tamil: 'கார்த்திகை', english: 'Karthigai', sanskrit: 'Vrischika' },
-            { tamil: 'மார்கழி', english: 'Margazhi', sanskrit: 'Dhanu' },
-            { tamil: 'தை', english: 'Thai', sanskrit: 'Makara' },
-            { tamil: 'மாசி', english: 'Maasi', sanskrit: 'Kumbha' },
-            { tamil: 'பங்குனி', english: 'Panguni', sanskrit: 'Meena' }
+            { tamil: 'சித்திரை', english: 'Chithirai', sanskrit: 'சைத்ர', sanskritEng: 'Chaitra' },
+            { tamil: 'வைகாசி', english: 'Vaikasi', sanskrit: 'வைசாக', sanskritEng: 'Vaishakha' },
+            { tamil: 'ஆனி', english: 'Aani', sanskrit: 'ஜ்யேஷ்ட', sanskritEng: 'Jyeshtha' },
+            { tamil: 'ஆடி', english: 'Aadi', sanskrit: 'ஆஷாட', sanskritEng: 'Ashadha' },
+            { tamil: 'ஆவணி', english: 'Aavani', sanskrit: 'ச்ராவண', sanskritEng: 'Shravana' },
+            { tamil: 'புரட்டாசி', english: 'Purattasi', sanskrit: 'பாத்ரபத', sanskritEng: 'Bhadrapada' },
+            { tamil: 'ஐப்பசி', english: 'Aippasi', sanskrit: 'ஆச்வின', sanskritEng: 'Ashwina' },
+            { tamil: 'கார்த்திகை', english: 'Karthigai', sanskrit: 'கார்த்திக', sanskritEng: 'Kartika' },
+            { tamil: 'மார்கழி', english: 'Margazhi', sanskrit: 'மார்கசீர்ஷ', sanskritEng: 'Margashirsha' },
+            { tamil: 'தை', english: 'Thai', sanskrit: 'பௌஷ', sanskritEng: 'Pausha' },
+            { tamil: 'மாசி', english: 'Maasi', sanskrit: 'மாக', sanskritEng: 'Magha' },
+            { tamil: 'பங்குனி', english: 'Panguni', sanskrit: 'பால்குன', sanskritEng: 'Phalguna' }
         ];
         
         // Samvatsara (60-year cycle)
@@ -1105,7 +1107,11 @@
             
             // Tamil month (based on Sun's position)
             const tamilMonthIndex = Math.floor(sunLong / 30) % 12;
-            const tamilMonth = TAMIL_MONTHS[tamilMonthIndex];
+            const tamilMonth = {
+                ...TAMIL_MONTHS[tamilMonthIndex],
+                sanskritVara: SANSKRIT_DAYS[dayOfWeek],
+                sanskritVaraEng: SANSKRIT_DAYS_ENG[dayOfWeek]
+            };
             
             // Samvatsara (60-year cycle, approximate)
             const samvatsaraIndex = (year - 1987) % 60; // 1987 was Prabhava
@@ -1240,10 +1246,10 @@
                         <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
                         <span class="highlight">${panchang.ayana.tamil}</span>,
                         <span class="highlight">${panchang.ritu.tamil}</span>,
-                        <span class="highlight">${panchang.tamilMonth.tamil}</span> மாசே,
+                        <span class="highlight">${panchang.tamilMonth.sanskrit}</span> மாசே,
                         <span class="highlight">${panchang.paksha.tamil}</span>,
                         <span class="highlight">${panchang.tithi.pakshNameTamil} ${panchang.tithi.tamil}</span> திதௌ,
-                        <span class="highlight">${panchang.day.tamil}</span> வாஸர,
+                        <span class="highlight">${panchang.tamilMonth.sanskritVara}</span> வாஸரே,
                         <span class="highlight">${panchang.nakshatra.tamil}</span> நக்ஷத்ரே,
                         <span class="highlight">${panchang.yoga.tamil}</span> யோகே,
                         <span class="highlight">${panchang.karana.tamil}</span> கரணே,
@@ -1254,10 +1260,10 @@
                         In the year <span class="highlight">${panchang.samvatsara}</span>,
                         during <span class="highlight">${panchang.ayana.english}</span>,
                         in <span class="highlight">${panchang.ritu.english}</span>,
-                        month of <span class="highlight">${panchang.tamilMonth.english}</span>,
+                        month of <span class="highlight">${panchang.tamilMonth.sanskritEng}</span>,
                         <span class="highlight">${panchang.paksha.english}</span>,
                         on <span class="highlight">${panchang.tithi.pakshaNameEnglish} ${panchang.tithi.english}</span>,
-                        <span class="highlight">${panchang.day.english}</span>,
+                        <span class="highlight">${panchang.tamilMonth.sanskritVaraEng}</span> Vasara,
                         star <span class="highlight">${panchang.nakshatra.english}</span>,
                         yoga <span class="highlight">${panchang.yoga.english}</span>,
                         karana <span class="highlight">${panchang.karana.english}</span>,
