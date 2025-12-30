@@ -570,17 +570,17 @@
             return 23.439291 - 0.0130042 * T;
         }
 
-        // Calculate the Ascendant (Lagna) degree using the correct astronomical formula
+        // Calculate the Ascendant (Lagna) degree using Swiss Ephemeris formula
         function calculateAscendant(lstDegrees, latitudeDegrees, obliquityDegrees) {
             const rad = Math.PI / 180;
-            const RAMC = lstDegrees * rad; // Right Ascension of Meridian (Local Sidereal Time)
+            const ARMC = lstDegrees * rad; // Sidereal Time in radians
             const lat = latitudeDegrees * rad;
             const eps = obliquityDegrees * rad; // Obliquity of ecliptic
             
-            // Correct Ascendant formula:
-            // tan(λ) = -cos(RAMC) / (cos(φ) × tan(ε) + sin(φ) × sin(RAMC))
-            const y = -Math.cos(RAMC);
-            const x = Math.cos(lat) * Math.tan(eps) + Math.sin(lat) * Math.sin(RAMC);
+            // Swiss Ephemeris Ascendant formula:
+            // tan(ASC) = cos(ARMC) / -(sin(ε) × tan(φ) + cos(ε) × sin(ARMC))
+            const y = Math.cos(ARMC);
+            const x = -(Math.sin(eps) * Math.tan(lat) + Math.cos(eps) * Math.sin(ARMC));
             
             let asc = Math.atan2(y, x) / rad;
             
