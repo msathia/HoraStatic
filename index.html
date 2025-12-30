@@ -570,6 +570,17 @@
             return 23.439291 - 0.0130042 * T;
         }
 
+        // Calculate Lahiri Ayanamsa for a given Julian Day
+        // Ayanamsa is the difference between tropical and sidereal zodiac
+        function getLahiriAyanamsa(jd) {
+            const T = (jd - 2451545.0) / 36525; // Centuries from J2000.0
+            // Lahiri Ayanamsa formula (precession)
+            // At J2000.0 (Jan 1, 2000), Lahiri Ayanamsa was approximately 23.856°
+            // Precession rate is approximately 50.29" per year = 0.01397° per year
+            const ayanamsa = 23.856 + (0.01397 * T * 100);
+            return ayanamsa;
+        }
+
         // Calculate the Ascendant (Lagna) degree using Swiss Ephemeris formula
         function calculateAscendant(lstDegrees, latitudeDegrees, obliquityDegrees) {
             const rad = Math.PI / 180;
@@ -610,9 +621,14 @@
             const gmst = getGMST(jd);
             const lst = getLST(gmst, loc.lng);
             const obliquity = getObliquity(jd);
-            const ascDegree = calculateAscendant(lst, loc.lat, obliquity);
+            const tropicalAsc = calculateAscendant(lst, loc.lat, obliquity);
             
-            return getRashiFromDegree(ascDegree);
+            // Convert tropical to sidereal (Vedic) by subtracting Ayanamsa
+            const ayanamsa = getLahiriAyanamsa(jd);
+            let siderealAsc = tropicalAsc - ayanamsa;
+            siderealAsc = ((siderealAsc % 360) + 360) % 360; // Normalize to 0-360
+            
+            return getRashiFromDegree(siderealAsc);
         }
 
         // Calculate Lagna schedule for the day
