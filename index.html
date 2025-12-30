@@ -835,24 +835,24 @@
 
         // Calculate all planetary positions for a given date (Sidereal/Vedic)
         function getAllPlanetaryPositions(year, month, day) {
-            // Reference date: Jan 1, 2025 approximate sidereal positions
-            // These are calibrated approximate values
-            const refDate = new Date(2025, 0, 1);
+            // Reference date: Dec 29, 2025 - calibrated to actual positions
+            const refDate = new Date(2025, 11, 29); // Dec 29, 2025
             const currentDate = new Date(year, month - 1, day);
             const daysDiff = Math.floor((currentDate - refDate) / 86400000);
             
-            // Reference positions (sidereal longitude in degrees) for Jan 1, 2025
-            // and daily motion rates
+            // Reference positions (sidereal longitude in degrees) for Dec 29, 2025
+            // Calibrated to actual Panchang data
+            // Dhanusu (Sagittarius) = 240-270°, Kumbam (Aquarius) = 300-330°
             const planetData = {
-                surya: { refLong: 255, rate: 0.9856 },      // Sagittarius, ~1°/day
-                chandra: { refLong: 120, rate: 13.176 },    // Leo area, ~13°/day
-                mangal: { refLong: 120, rate: 0.524 },      // Cancer/Leo, ~0.5°/day
-                budha: { refLong: 270, rate: 1.383 },       // Near Sun, variable
-                guru: { refLong: 50, rate: 0.083 },         // Taurus, ~0.08°/day
-                shukra: { refLong: 300, rate: 1.2 },        // Near Sun, variable
-                shani: { refLong: 340, rate: 0.033 },       // Pisces, ~0.03°/day
-                rahu: { refLong: 332, rate: -0.053 },       // Pisces, retrograde
-                ketu: { refLong: 152, rate: -0.053 }        // Virgo, retrograde (opposite Rahu)
+                surya: { refLong: 253, rate: 0.9856 },      // Dhanusu (Sagittarius)
+                chandra: { refLong: 90, rate: 13.176 },     // Changes daily ~13°/day
+                mangal: { refLong: 258, rate: 0.524 },      // Dhanusu (Sagittarius)
+                budha: { refLong: 250, rate: 1.2 },         // Dhanusu (Sagittarius)
+                guru: { refLong: 55, rate: 0.083 },         // Vrishabha (Taurus)
+                shukra: { refLong: 262, rate: 1.1 },        // Dhanusu (Sagittarius)
+                shani: { refLong: 320, rate: 0.033 },       // Kumbam (Aquarius)
+                rahu: { refLong: 318, rate: -0.053 },       // Kumbam (Aquarius), retrograde
+                ketu: { refLong: 138, rate: -0.053 }        // Simha (Leo), retrograde (opposite Rahu)
             };
             
             const positions = {};
