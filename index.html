@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕉️ Hora Calculator - Vedic Planetary Hours</title>
+    <title>🕉️ Hora & Lagna Calculator - Vedic Astrology</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -95,6 +95,55 @@
             font-weight: 500;
         }
         
+        .current-lagna {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .current-lagna .rashi-symbol { font-size: 3em; margin-bottom: 10px; }
+        .current-lagna .rashi-name { font-size: 1.8em; font-weight: 600; }
+        .current-lagna .rashi-sanskrit { font-size: 1.2em; opacity: 0.9; margin-top: 5px; }
+        .current-lagna .time-range { font-size: 1.1em; opacity: 0.85; margin: 15px 0; }
+        .current-lagna .element { 
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        
+        .lagna-schedule {
+            background: rgba(255,255,255,0.95);
+            color: #1a1a2e;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .lagna-schedule h2 { 
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            color: #6366f1;
+        }
+        tr.fire { background: #fef2f2; }
+        tr.earth { background: #f0fdf4; }
+        tr.air { background: #eff6ff; }
+        tr.water { background: #f0f9ff; }
+        tr.lagna-current { outline: 3px solid #8b5cf6; outline-offset: -3px; }
+        
+        .dual-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        @media (max-width: 768px) {
+            .dual-panel { grid-template-columns: 1fr; }
+        }
+        
         .schedule {
             background: rgba(255,255,255,0.95);
             color: #1a1a2e;
@@ -160,8 +209,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🕉️ Hora Calculator</h1>
-            <div class="subtitle">Vedic Planetary Hours - Calculated Locally</div>
+            <h1>🕉️ Hora & Lagna Calculator</h1>
+            <div class="subtitle">Vedic Planetary Hours & Rising Signs - Calculated Locally</div>
             <div class="location" id="location-display">📍 Loading...</div>
             <div class="time" id="datetime-display">📅 Loading...</div>
         </div>
@@ -197,9 +246,16 @@
         </div>
         
         <div class="legend">
+            <strong>Hora:</strong>
             <span style="color: #10b981;">✓ Good (Jupiter, Venus, Mercury, Moon)</span>
             <span style="color: #f59e0b;">~ Neutral (Sun)</span>
             <span style="color: #ef4444;">✗ Avoid (Mars, Saturn)</span>
+            <br><br>
+            <strong>Lagna Elements:</strong>
+            <span style="color: #ef4444;">🔥 Fire (Aries, Leo, Sagittarius)</span>
+            <span style="color: #22c55e;">🌍 Earth (Taurus, Virgo, Capricorn)</span>
+            <span style="color: #3b82f6;">💨 Air (Gemini, Libra, Aquarius)</span>
+            <span style="color: #06b6d4;">💧 Water (Cancer, Scorpio, Pisces)</span>
         </div>
         
         <div class="footer">
@@ -244,6 +300,22 @@
         // Day rulers and hora sequence
         const DAY_RULERS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
         const HORA_SEQUENCE = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"];
+
+        // Zodiac signs (Rashis) for Lagna calculation
+        const RASHIS = [
+            { name: "Aries", sanskrit: "Mesha (मेष)", symbol: "♈", ruler: "Mars", element: "fire", quality: "Cardinal" },
+            { name: "Taurus", sanskrit: "Vrishabha (वृषभ)", symbol: "♉", ruler: "Venus", element: "earth", quality: "Fixed" },
+            { name: "Gemini", sanskrit: "Mithuna (मिथुन)", symbol: "♊", ruler: "Mercury", element: "air", quality: "Mutable" },
+            { name: "Cancer", sanskrit: "Karka (कर्क)", symbol: "♋", ruler: "Moon", element: "water", quality: "Cardinal" },
+            { name: "Leo", sanskrit: "Simha (सिंह)", symbol: "♌", ruler: "Sun", element: "fire", quality: "Fixed" },
+            { name: "Virgo", sanskrit: "Kanya (कन्या)", symbol: "♍", ruler: "Mercury", element: "earth", quality: "Mutable" },
+            { name: "Libra", sanskrit: "Tula (तुला)", symbol: "♎", ruler: "Venus", element: "air", quality: "Cardinal" },
+            { name: "Scorpio", sanskrit: "Vrishchika (वृश्चिक)", symbol: "♏", ruler: "Mars", element: "water", quality: "Fixed" },
+            { name: "Sagittarius", sanskrit: "Dhanu (धनु)", symbol: "♐", ruler: "Jupiter", element: "fire", quality: "Mutable" },
+            { name: "Capricorn", sanskrit: "Makara (मकर)", symbol: "♑", ruler: "Saturn", element: "earth", quality: "Cardinal" },
+            { name: "Aquarius", sanskrit: "Kumbha (कुम्भ)", symbol: "♒", ruler: "Saturn", element: "air", quality: "Fixed" },
+            { name: "Pisces", sanskrit: "Meena (मीन)", symbol: "♓", ruler: "Jupiter", element: "water", quality: "Mutable" }
+        ];
 
         let currentLocation = "austin";
 
@@ -445,31 +517,207 @@
             return { current: schedule[0], index: 0, next: schedule[1] };
         }
 
+        // ==================== LAGNA CALCULATIONS ====================
+        
+        // Calculate Julian Day Number
+        function getJulianDay(year, month, day, hour, minute) {
+            const decimalHour = hour + minute / 60;
+            if (month <= 2) {
+                year -= 1;
+                month += 12;
+            }
+            const A = Math.floor(year / 100);
+            const B = 2 - A + Math.floor(A / 4);
+            const JD = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + decimalHour / 24 + B - 1524.5;
+            return JD;
+        }
+
+        // Calculate Greenwich Mean Sidereal Time (GMST) in degrees
+        function getGMST(jd) {
+            const T = (jd - 2451545.0) / 36525;
+            let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000;
+            gmst = gmst % 360;
+            if (gmst < 0) gmst += 360;
+            return gmst;
+        }
+
+        // Calculate Local Sidereal Time (LST) in degrees
+        function getLST(gmst, longitude) {
+            let lst = gmst + longitude;
+            lst = lst % 360;
+            if (lst < 0) lst += 360;
+            return lst;
+        }
+
+        // Calculate the Ascendant (Lagna) degree
+        function calculateAscendant(lst, latitude, obliquity) {
+            const rad = Math.PI / 180;
+            const lstRad = lst * rad;
+            const latRad = latitude * rad;
+            const oblRad = obliquity * rad;
+            
+            // Calculate ascendant using the formula
+            const y = -Math.cos(lstRad);
+            const x = Math.sin(lstRad) * Math.cos(oblRad) + Math.tan(latRad) * Math.sin(oblRad);
+            
+            let asc = Math.atan2(y, x) / rad;
+            if (asc < 0) asc += 360;
+            
+            return asc;
+        }
+
+        // Get obliquity of ecliptic for a given Julian Day
+        function getObliquity(jd) {
+            const T = (jd - 2451545.0) / 36525;
+            const obliquity = 23.439291 - 0.0130042 * T - 0.00000016 * T * T + 0.000000504 * T * T * T;
+            return obliquity;
+        }
+
+        // Get Rashi (zodiac sign) from degree (0-360)
+        function getRashiFromDegree(degree) {
+            const rashiIndex = Math.floor(degree / 30) % 12;
+            const degreeInRashi = degree % 30;
+            return { ...RASHIS[rashiIndex], index: rashiIndex, degree: degreeInRashi };
+        }
+
+        // Calculate current Lagna
+        function calculateCurrentLagna(location) {
+            const loc = LOCATIONS[location];
+            const now = new Date();
+            const tzOffset = getTimezoneOffset(loc.tz);
+            const localDate = getDateInTimezone(now, loc.tz);
+            
+            // Convert local time to UTC for Julian Day calculation
+            const utcHour = localDate.hour - tzOffset;
+            const jd = getJulianDay(localDate.year, localDate.month, localDate.day, utcHour, localDate.minute);
+            
+            const gmst = getGMST(jd);
+            const lst = getLST(gmst, loc.lng);
+            const obliquity = getObliquity(jd);
+            const ascDegree = calculateAscendant(lst, loc.lat, obliquity);
+            
+            return getRashiFromDegree(ascDegree);
+        }
+
+        // Calculate Lagna schedule for the day (approximate times for each Lagna)
+        function calculateLagnaSchedule(location) {
+            const loc = LOCATIONS[location];
+            const now = new Date();
+            const tzOffset = getTimezoneOffset(loc.tz);
+            const localDate = getDateInTimezone(now, loc.tz);
+            
+            const schedule = [];
+            
+            // Calculate Lagna at start of day (midnight)
+            const midnightJD = getJulianDay(localDate.year, localDate.month, localDate.day, 0 - tzOffset, 0);
+            const midnightGMST = getGMST(midnightJD);
+            const midnightLST = getLST(midnightGMST, loc.lng);
+            const obliquity = getObliquity(midnightJD);
+            
+            // Find when each Lagna starts by iterating through the day
+            let prevRashi = -1;
+            let lagnaStart = null;
+            const lagnaEntries = [];
+            
+            // Check every 2 minutes for Lagna changes (more accurate)
+            for (let mins = 0; mins <= 24 * 60; mins += 2) {
+                const hour = Math.floor(mins / 60);
+                const minute = mins % 60;
+                const jd = getJulianDay(localDate.year, localDate.month, localDate.day, hour - tzOffset, minute);
+                const gmst = getGMST(jd);
+                const lst = getLST(gmst, loc.lng);
+                const asc = calculateAscendant(lst, loc.lat, obliquity);
+                const rashi = getRashiFromDegree(asc);
+                
+                if (rashi.index !== prevRashi) {
+                    if (lagnaStart !== null) {
+                        lagnaEntries.push({
+                            ...RASHIS[prevRashi],
+                            index: prevRashi,
+                            start: formatTimeObj(lagnaStart),
+                            end: formatTimeObj({ hour, minute }),
+                            startMinutes: timeObjToMinutes(lagnaStart),
+                            endMinutes: mins
+                        });
+                    }
+                    lagnaStart = { hour, minute };
+                    prevRashi = rashi.index;
+                }
+            }
+            
+            // Add the last entry (wraps to next day)
+            if (lagnaStart !== null) {
+                lagnaEntries.push({
+                    ...RASHIS[prevRashi],
+                    index: prevRashi,
+                    start: formatTimeObj(lagnaStart),
+                    end: "12:00 AM+",
+                    startMinutes: timeObjToMinutes(lagnaStart),
+                    endMinutes: 24 * 60
+                });
+            }
+            
+            return lagnaEntries;
+        }
+
+        // Find current Lagna from schedule
+        function findCurrentLagnaFromSchedule(schedule, localDate) {
+            const currentMinutes = localDate.hour * 60 + localDate.minute;
+            
+            for (let i = 0; i < schedule.length; i++) {
+                const lagna = schedule[i];
+                if (currentMinutes >= lagna.startMinutes && currentMinutes < lagna.endMinutes) {
+                    return { current: lagna, index: i, next: schedule[(i + 1) % schedule.length] };
+                }
+            }
+            return { current: schedule[0], index: 0, next: schedule[1] };
+        }
+
+        // ==================== END LAGNA CALCULATIONS ====================
+
         // Render the page
         function render() {
             const loc = LOCATIONS[currentLocation];
             const now = new Date();
+            const localDate = getDateInTimezone(now, loc.tz);
             
             // Update header with proper timezone display
             document.getElementById('location-display').textContent = `📍 ${loc.name}`;
             document.getElementById('datetime-display').textContent = 
                 `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}`;
             
-            // Calculate schedule
+            // Calculate Hora schedule
             const data = calculateHoraSchedule(currentLocation);
             const { current, index, next } = findCurrentHora(data.schedule, data.localDate, data.sunset);
+            
+            // Calculate Lagna
+            const lagnaSchedule = calculateLagnaSchedule(currentLocation);
+            const currentLagnaData = findCurrentLagnaFromSchedule(lagnaSchedule, localDate);
+            const currentLagna = currentLagnaData.current;
+            const nextLagna = currentLagnaData.next;
             
             // Jupiter horas
             const jupiterHoras = data.schedule.filter(h => h.planet === 'Jupiter');
             
             // Generate HTML
             let html = `
-                <div class="current-hora ${current.quality}">
-                    <div class="planet">${current.emoji}</div>
-                    <div class="name">${current.planet} Hora</div>
-                    <div class="time-range">${current.start} - ${current.end}</div>
-                    <div class="quality">${current.quality === 'good' ? '✅ Auspicious' : current.quality === 'avoid' ? '⚠️ Avoid' : '🔸 Neutral'}</div>
-                    ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} (${next.start})</p>` : ''}
+                <div class="dual-panel">
+                    <div class="current-hora ${current.quality}">
+                        <div class="planet">${current.emoji}</div>
+                        <div class="name">${current.planet} Hora</div>
+                        <div class="time-range">${current.start} - ${current.end}</div>
+                        <div class="quality">${current.quality === 'good' ? '✅ Auspicious' : current.quality === 'avoid' ? '⚠️ Avoid' : '🔸 Neutral'}</div>
+                        ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} (${next.start})</p>` : ''}
+                    </div>
+                    
+                    <div class="current-lagna">
+                        <div class="rashi-symbol">${currentLagna.symbol}</div>
+                        <div class="rashi-name">${currentLagna.name} Lagna</div>
+                        <div class="rashi-sanskrit">${currentLagna.sanskrit}</div>
+                        <div class="time-range">${currentLagna.start} - ${currentLagna.end}</div>
+                        <div class="element">${currentLagna.element.charAt(0).toUpperCase() + currentLagna.element.slice(1)} Sign • Ruled by ${currentLagna.ruler}</div>
+                        ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} (${nextLagna.start})</p>` : ''}
+                    </div>
                 </div>
                 
                 <div class="jupiter-box">
@@ -477,6 +725,25 @@
                     <ul>
                         ${jupiterHoras.map(h => `<li>${h.start} - ${h.end}</li>`).join('')}
                     </ul>
+                </div>
+                
+                <div class="lagna-schedule">
+                    <h2>🌟 Today's Lagna (Ascendant) Schedule</h2>
+                    <table>
+                        <thead><tr><th>#</th><th>Lagna</th><th>Sanskrit</th><th>Time</th><th>Element</th><th>Ruler</th></tr></thead>
+                        <tbody>
+                            ${lagnaSchedule.map((l, i) => `
+                                <tr class="${l.element} ${l.index === currentLagna.index ? 'lagna-current' : ''}">
+                                    <td>${i + 1}</td>
+                                    <td>${l.symbol} ${l.name}</td>
+                                    <td>${l.sanskrit.split(' ')[0]}</td>
+                                    <td>${l.start} - ${l.end}</td>
+                                    <td>${l.element.charAt(0).toUpperCase() + l.element.slice(1)}</td>
+                                    <td>${l.ruler}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
                 
                 <div class="schedule">
