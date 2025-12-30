@@ -269,6 +269,47 @@
             .rashi-cell .rashi-eng { font-size: 0.55em; }
         }
         
+        /* Panchang Styles */
+        .panchang-container {
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .panchang-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+        .panchang-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 600px) {
+            .panchang-grid { grid-template-columns: 1fr; }
+        }
+        .panchang-item {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .panchang-item .label {
+            font-size: 0.8em;
+            opacity: 0.85;
+            margin-bottom: 5px;
+        }
+        .panchang-item .value-tamil {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        .panchang-item .value-english {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 3px;
+        }
+        
         .schedule {
             background: rgba(255,255,255,0.95);
             color: #1a1a2e;
@@ -820,6 +861,206 @@
 
         // ==================== END LAGNA CALCULATIONS ====================
 
+        // ==================== PANCHANG CALCULATIONS ====================
+        
+        // Tamil weekday names
+        const TAMIL_DAYS = ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி'];
+        const ENGLISH_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // Tithi names (15 for each paksha)
+        const TITHIS = [
+            { tamil: 'பிரதமை', english: 'Prathama' },
+            { tamil: 'த்விதீயை', english: 'Dwitiya' },
+            { tamil: 'திருதீயை', english: 'Tritiya' },
+            { tamil: 'சதுர்த்தி', english: 'Chaturthi' },
+            { tamil: 'பஞ்சமி', english: 'Panchami' },
+            { tamil: 'ஷஷ்டி', english: 'Shashthi' },
+            { tamil: 'சப்தமி', english: 'Saptami' },
+            { tamil: 'அஷ்டமி', english: 'Ashtami' },
+            { tamil: 'நவமி', english: 'Navami' },
+            { tamil: 'தசமி', english: 'Dashami' },
+            { tamil: 'ஏகாதசி', english: 'Ekadashi' },
+            { tamil: 'த்வாதசி', english: 'Dwadashi' },
+            { tamil: 'த்ரயோதசி', english: 'Trayodashi' },
+            { tamil: 'சதுர்தசி', english: 'Chaturdashi' },
+            { tamil: 'பூர்ணிமை', english: 'Purnima' } // or Amavasya for Krishna
+        ];
+        
+        // 27 Nakshatras
+        const NAKSHATRAS = [
+            { tamil: 'அஸ்வினி', english: 'Ashwini' },
+            { tamil: 'பரணி', english: 'Bharani' },
+            { tamil: 'கார்த்திகை', english: 'Krittika' },
+            { tamil: 'ரோகிணி', english: 'Rohini' },
+            { tamil: 'மிருகசீரிஷம்', english: 'Mrigashira' },
+            { tamil: 'திருவாதிரை', english: 'Ardra' },
+            { tamil: 'புனர்பூசம்', english: 'Punarvasu' },
+            { tamil: 'பூசம்', english: 'Pushya' },
+            { tamil: 'ஆயில்யம்', english: 'Ashlesha' },
+            { tamil: 'மகம்', english: 'Magha' },
+            { tamil: 'பூரம்', english: 'Purva Phalguni' },
+            { tamil: 'உத்திரம்', english: 'Uttara Phalguni' },
+            { tamil: 'அஸ்தம்', english: 'Hasta' },
+            { tamil: 'சித்திரை', english: 'Chitra' },
+            { tamil: 'சுவாதி', english: 'Swati' },
+            { tamil: 'விசாகம்', english: 'Vishakha' },
+            { tamil: 'அனுஷம்', english: 'Anuradha' },
+            { tamil: 'கேட்டை', english: 'Jyeshtha' },
+            { tamil: 'மூலம்', english: 'Moola' },
+            { tamil: 'பூராடம்', english: 'Purva Ashadha' },
+            { tamil: 'உத்திராடம்', english: 'Uttara Ashadha' },
+            { tamil: 'திருவோணம்', english: 'Shravana' },
+            { tamil: 'அவிட்டம்', english: 'Dhanishta' },
+            { tamil: 'சதயம்', english: 'Shatabhisha' },
+            { tamil: 'பூரட்டாதி', english: 'Purva Bhadrapada' },
+            { tamil: 'உத்திரட்டாதி', english: 'Uttara Bhadrapada' },
+            { tamil: 'ரேவதி', english: 'Revati' }
+        ];
+        
+        // 27 Yogas
+        const YOGAS = [
+            { tamil: 'விஷ்கம்பம்', english: 'Vishkambha' },
+            { tamil: 'ப்ரீதி', english: 'Priti' },
+            { tamil: 'ஆயுஷ்மான்', english: 'Ayushman' },
+            { tamil: 'சௌபாக்யம்', english: 'Saubhagya' },
+            { tamil: 'சோபனம்', english: 'Shobhana' },
+            { tamil: 'அதிகண்டம்', english: 'Atiganda' },
+            { tamil: 'சுகர்மா', english: 'Sukarma' },
+            { tamil: 'த்ருதி', english: 'Dhriti' },
+            { tamil: 'சூலம்', english: 'Shoola' },
+            { tamil: 'கண்டம்', english: 'Ganda' },
+            { tamil: 'விருத்தி', english: 'Vriddhi' },
+            { tamil: 'த்ருவம்', english: 'Dhruva' },
+            { tamil: 'வ்யாகாதம்', english: 'Vyaghata' },
+            { tamil: 'ஹர்ஷணம்', english: 'Harshana' },
+            { tamil: 'வஜ்ரம்', english: 'Vajra' },
+            { tamil: 'சித்தி', english: 'Siddhi' },
+            { tamil: 'வ்யதீபாதம்', english: 'Vyatipata' },
+            { tamil: 'வரீயான்', english: 'Variyan' },
+            { tamil: 'பரிகம்', english: 'Parigha' },
+            { tamil: 'சிவம்', english: 'Shiva' },
+            { tamil: 'சித்தம்', english: 'Siddha' },
+            { tamil: 'சாத்யம்', english: 'Sadhya' },
+            { tamil: 'சுபம்', english: 'Shubha' },
+            { tamil: 'சுக்லம்', english: 'Shukla' },
+            { tamil: 'ப்ரம்மம்', english: 'Brahma' },
+            { tamil: 'ஐந்திரம்', english: 'Indra' },
+            { tamil: 'வைத்ருதி', english: 'Vaidhriti' }
+        ];
+        
+        // 11 Karanas (7 repeat, 4 are fixed)
+        const KARANAS = [
+            { tamil: 'பவம்', english: 'Bava' },
+            { tamil: 'பாலவம்', english: 'Balava' },
+            { tamil: 'கௌலவம்', english: 'Kaulava' },
+            { tamil: 'தைதுலம்', english: 'Taitila' },
+            { tamil: 'கரஜம்', english: 'Garaja' },
+            { tamil: 'வணிஜம்', english: 'Vanija' },
+            { tamil: 'விஷ்டி', english: 'Vishti' },
+            { tamil: 'சகுனி', english: 'Shakuni' },
+            { tamil: 'சதுஷ்பாதம்', english: 'Chatushpada' },
+            { tamil: 'நாகம்', english: 'Naga' },
+            { tamil: 'கிம்ஸ்துக்னம்', english: 'Kimstughna' }
+        ];
+        
+        // Calculate Panchang details
+        function calculatePanchang(year, month, day, hour, minute) {
+            const planets = getAllPlanetaryPositions(year, month, day);
+            const sunLong = planets.surya.longitude;
+            const moonLong = planets.chandra.longitude;
+            
+            // Adjust moon longitude for current time (Moon moves ~0.5° per hour)
+            const hourFraction = hour + minute / 60;
+            const adjustedMoonLong = (moonLong + (hourFraction * 0.55)) % 360;
+            
+            // Tithi: Angular distance between Moon and Sun / 12
+            let tithiAngle = adjustedMoonLong - sunLong;
+            if (tithiAngle < 0) tithiAngle += 360;
+            const tithiNum = Math.floor(tithiAngle / 12);
+            const tithiIndex = tithiNum % 15;
+            const paksha = tithiNum < 15 ? 'shukla' : 'krishna';
+            
+            // Nakshatra: Moon's longitude / 13.333
+            const nakshatraIndex = Math.floor(adjustedMoonLong / (360 / 27)) % 27;
+            
+            // Yoga: (Sun longitude + Moon longitude) / 13.333
+            let yogaAngle = (sunLong + adjustedMoonLong) % 360;
+            const yogaIndex = Math.floor(yogaAngle / (360 / 27)) % 27;
+            
+            // Karana: Each tithi has 2 karanas
+            const karanaNum = Math.floor(tithiAngle / 6) % 60;
+            let karanaIndex;
+            if (karanaNum === 0) karanaIndex = 10; // Kimstughna
+            else if (karanaNum >= 57) karanaIndex = 7 + (karanaNum - 57); // Fixed karanas
+            else karanaIndex = (karanaNum - 1) % 7;
+            
+            // Day of week
+            const date = new Date(year, month - 1, day);
+            const dayOfWeek = date.getDay();
+            
+            return {
+                tithi: {
+                    ...TITHIS[tithiIndex],
+                    number: tithiIndex + 1,
+                    pakpiNameTamil: paksha === 'shukla' ? 'சுக்ல' : 'கிருஷ்ண',
+                    pakshaNameEnglish: paksha === 'shukla' ? 'Shukla' : 'Krishna'
+                },
+                nakshatra: NAKSHATRAS[nakshatraIndex],
+                yoga: YOGAS[yogaIndex],
+                karana: KARANAS[karanaIndex],
+                paksha: {
+                    tamil: paksha === 'shukla' ? 'சுக்ல பக்ஷம்' : 'கிருஷ்ண பக்ஷம்',
+                    english: paksha === 'shukla' ? 'Shukla Paksha' : 'Krishna Paksha'
+                },
+                day: {
+                    tamil: TAMIL_DAYS[dayOfWeek],
+                    english: ENGLISH_DAYS[dayOfWeek]
+                }
+            };
+        }
+        
+        // Generate Panchang HTML
+        function generatePanchangHTML(localDate) {
+            const panchang = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
+            
+            return `
+                <div class="panchang-grid">
+                    <div class="panchang-item">
+                        <div class="label">கிழமை / Day</div>
+                        <div class="value-tamil">${panchang.day.tamil}</div>
+                        <div class="value-english">${panchang.day.english}</div>
+                    </div>
+                    <div class="panchang-item">
+                        <div class="label">திதி / Tithi</div>
+                        <div class="value-tamil">${panchang.tithi.pakpiNameTamil}-${panchang.tithi.tamil}</div>
+                        <div class="value-english">${panchang.tithi.pakshaNameEnglish}-${panchang.tithi.english}</div>
+                    </div>
+                    <div class="panchang-item">
+                        <div class="label">நட்சத்திரம் / Nakshatra</div>
+                        <div class="value-tamil">${panchang.nakshatra.tamil}</div>
+                        <div class="value-english">${panchang.nakshatra.english}</div>
+                    </div>
+                    <div class="panchang-item">
+                        <div class="label">யோகம் / Yoga</div>
+                        <div class="value-tamil">${panchang.yoga.tamil}</div>
+                        <div class="value-english">${panchang.yoga.english}</div>
+                    </div>
+                    <div class="panchang-item">
+                        <div class="label">கரணம் / Karana</div>
+                        <div class="value-tamil">${panchang.karana.tamil}</div>
+                        <div class="value-english">${panchang.karana.english}</div>
+                    </div>
+                    <div class="panchang-item">
+                        <div class="label">பக்ஷம் / Paksha</div>
+                        <div class="value-tamil">${panchang.paksha.tamil}</div>
+                        <div class="value-english">${panchang.paksha.english}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ==================== END PANCHANG CALCULATIONS ====================
+
         // Navagraha (9 Planets) data with Tamil names
         const GRAHAS = {
             surya: { name: 'Sun', tamil: 'சூரியன்', short: 'சூ', symbol: '☉' },
@@ -1007,6 +1248,11 @@
                         <div class="element">${currentLagna.element.charAt(0).toUpperCase() + currentLagna.element.slice(1)} Sign • ${currentLagna.ruler} / ${currentLagna.rulerTamil}</div>
                         ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} / ${nextLagna.tamil} (${nextLagna.start})</p>` : ''}
                     </div>
+                </div>
+                
+                <div class="panchang-container">
+                    <h2>📅 இன்றைய பஞ்சாங்கம் / Today's Panchang</h2>
+                    ${generatePanchangHTML(localDate)}
                 </div>
                 
                 <div class="jupiter-box">
