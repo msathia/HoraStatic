@@ -309,59 +309,54 @@
             opacity: 0.9;
             margin-top: 3px;
         }
-        .rahu-kalam-box {
-            margin-top: 20px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            padding: 15px 20px;
+        .sankalpam-box {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+            border: 2px solid #fbbf24;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
             text-align: center;
         }
-        .rahu-kalam-box.active {
-            background: rgba(239, 68, 68, 0.3);
-            border: 2px solid #ef4444;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        .rahu-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .rahu-icon {
-            font-size: 1.3em;
-        }
-        .rahu-title {
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-        .rahu-warning {
-            background: #ef4444;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .rahu-time {
+        .sankalpam-title {
             font-size: 1.5em;
             font-weight: 700;
-            margin: 10px 0;
+            margin-bottom: 20px;
+            color: #fbbf24;
         }
-        .sun-times {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
+        .sankalpam-text {
+            font-size: 1.05em;
+            line-height: 2;
+            margin-bottom: 15px;
+        }
+        .sankalpam-english {
             font-size: 0.85em;
-            opacity: 0.9;
+            line-height: 1.8;
+            opacity: 0.85;
+            font-style: italic;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+        .sankalpam-text .highlight,
+        .sankalpam-english .highlight {
+            color: #fbbf24;
+            font-weight: 700;
+            background: rgba(251, 191, 36, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .panchang-item .end-time {
+            font-size: 0.75em;
+            color: #fbbf24;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .panchang-item.rahu-active {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid #ef4444;
+        }
+        .panchang-item.rahu-active .value-tamil {
+            color: #fca5a5;
         }
         
         .schedule {
@@ -1002,6 +997,42 @@
             { tamil: 'வைத்ருதி', english: 'Vaidhriti' }
         ];
         
+        // Tamil Months
+        const TAMIL_MONTHS = [
+            { tamil: 'சித்திரை', english: 'Chithirai', sanskrit: 'Mesha' },
+            { tamil: 'வைகாசி', english: 'Vaikasi', sanskrit: 'Vrishabha' },
+            { tamil: 'ஆனி', english: 'Aani', sanskrit: 'Mithuna' },
+            { tamil: 'ஆடி', english: 'Aadi', sanskrit: 'Kataka' },
+            { tamil: 'ஆவணி', english: 'Aavani', sanskrit: 'Simha' },
+            { tamil: 'புரட்டாசி', english: 'Purattasi', sanskrit: 'Kanya' },
+            { tamil: 'ஐப்பசி', english: 'Aippasi', sanskrit: 'Tula' },
+            { tamil: 'கார்த்திகை', english: 'Karthigai', sanskrit: 'Vrischika' },
+            { tamil: 'மார்கழி', english: 'Margazhi', sanskrit: 'Dhanu' },
+            { tamil: 'தை', english: 'Thai', sanskrit: 'Makara' },
+            { tamil: 'மாசி', english: 'Maasi', sanskrit: 'Kumbha' },
+            { tamil: 'பங்குனி', english: 'Panguni', sanskrit: 'Meena' }
+        ];
+        
+        // Samvatsara (60-year cycle)
+        const SAMVATSARAS = [
+            'பிரபவ', 'விபவ', 'சுக்ல', 'பிரமோதூத', 'பிரஜோத்பத்தி', 'ஆங்கீரச', 'ஸ்ரீமுக', 'பவ', 'யுவ', 'தாது',
+            'ஈஸ்வர', 'வெகுதான்ய', 'பிரமாதி', 'விக்கிரம', 'விஷு', 'சித்திரபானு', 'சுபானு', 'தாரண', 'பார்த்திப', 'விய',
+            'சர்வஜித்', 'சர்வதாரி', 'விரோதி', 'விக்ருதி', 'கர', 'நந்தன', 'விஜய', 'ஜய', 'மன்மத', 'துர்முகி',
+            'ஹேவிளம்பி', 'விளம்பி', 'விகாரி', 'சார்வரி', 'பிலவ', 'சுபகிருது', 'சோபகிருது', 'குரோதி', 'விசுவாவசு', 'பராபவ',
+            'பிலவங்க', 'கீலக', 'சௌமிய', 'சாதாரண', 'விரோதகிருது', 'பரிதாபி', 'பிரமாதீச', 'ஆனந்த', 'ராக்ஷச', 'நள',
+            'பிங்கள', 'காளயுக்தி', 'சித்தார்த்தி', 'ரௌத்ரி', 'துர்மதி', 'துந்துபி', 'ருத்ரோத்காரி', 'ரக்தாக்ஷி', 'குரோதன', 'அக்ஷய'
+        ];
+        
+        // Ritu (Seasons)
+        const RITUS = [
+            { tamil: 'வசந்த ருது', english: 'Vasanta (Spring)', months: [0, 1] },
+            { tamil: 'கிரீஷ்ம ருது', english: 'Greeshma (Summer)', months: [2, 3] },
+            { tamil: 'வர்ஷ ருது', english: 'Varsha (Monsoon)', months: [4, 5] },
+            { tamil: 'சரத் ருது', english: 'Sharad (Autumn)', months: [6, 7] },
+            { tamil: 'ஹேமந்த ருது', english: 'Hemanta (Pre-winter)', months: [8, 9] },
+            { tamil: 'சிசிர ருது', english: 'Shishira (Winter)', months: [10, 11] }
+        ];
+
         // 11 Karanas (7 repeat, 4 are fixed)
         const KARANAS = [
             { tamil: 'பவம்', english: 'Bava' },
@@ -1017,15 +1048,16 @@
             { tamil: 'கிம்ஸ்துக்னம்', english: 'Kimstughna' }
         ];
         
-        // Calculate Panchang details
+        // Calculate Panchang details with ending times
         function calculatePanchang(year, month, day, hour, minute) {
             const planets = getAllPlanetaryPositions(year, month, day);
             const sunLong = planets.surya.longitude;
             const moonLong = planets.chandra.longitude;
             
-            // Adjust moon longitude for current time (Moon moves ~0.5° per hour)
+            // Adjust moon longitude for current time (Moon moves ~0.55° per hour)
             const hourFraction = hour + minute / 60;
-            const adjustedMoonLong = (moonLong + (hourFraction * 0.55)) % 360;
+            const moonSpeed = 0.55; // degrees per hour
+            const adjustedMoonLong = (moonLong + (hourFraction * moonSpeed)) % 360;
             
             // Tithi: Angular distance between Moon and Sun / 12
             let tithiAngle = adjustedMoonLong - sunLong;
@@ -1034,33 +1066,76 @@
             const tithiIndex = tithiNum % 15;
             const paksha = tithiNum < 15 ? 'shukla' : 'krishna';
             
+            // Calculate Tithi ending time
+            const tithiProgress = (tithiAngle % 12) / 12; // Progress within current tithi
+            const tithiRemaining = 1 - tithiProgress;
+            const hoursToTithiEnd = (tithiRemaining * 12) / (moonSpeed - 0.04); // Moon-Sun relative speed
+            const tithiEndTime = calculateEndTime(hour, minute, hoursToTithiEnd);
+            
             // Nakshatra: Moon's longitude / 13.333
-            const nakshatraIndex = Math.floor(adjustedMoonLong / (360 / 27)) % 27;
+            const nakshatraDegree = 360 / 27;
+            const nakshatraIndex = Math.floor(adjustedMoonLong / nakshatraDegree) % 27;
+            
+            // Calculate Nakshatra ending time
+            const nakshatraProgress = (adjustedMoonLong % nakshatraDegree) / nakshatraDegree;
+            const nakshatraRemaining = 1 - nakshatraProgress;
+            const hoursToNakshatraEnd = (nakshatraRemaining * nakshatraDegree) / moonSpeed;
+            const nakshatraEndTime = calculateEndTime(hour, minute, hoursToNakshatraEnd);
             
             // Yoga: (Sun longitude + Moon longitude) / 13.333
             let yogaAngle = (sunLong + adjustedMoonLong) % 360;
-            const yogaIndex = Math.floor(yogaAngle / (360 / 27)) % 27;
+            const yogaIndex = Math.floor(yogaAngle / nakshatraDegree) % 27;
+            
+            // Calculate Yoga ending time
+            const yogaProgress = (yogaAngle % nakshatraDegree) / nakshatraDegree;
+            const yogaRemaining = 1 - yogaProgress;
+            const hoursToYogaEnd = (yogaRemaining * nakshatraDegree) / (moonSpeed + 0.04);
+            const yogaEndTime = calculateEndTime(hour, minute, hoursToYogaEnd);
             
             // Karana: Each tithi has 2 karanas
             const karanaNum = Math.floor(tithiAngle / 6) % 60;
             let karanaIndex;
-            if (karanaNum === 0) karanaIndex = 10; // Kimstughna
-            else if (karanaNum >= 57) karanaIndex = 7 + (karanaNum - 57); // Fixed karanas
+            if (karanaNum === 0) karanaIndex = 10;
+            else if (karanaNum >= 57) karanaIndex = 7 + (karanaNum - 57);
             else karanaIndex = (karanaNum - 1) % 7;
             
             // Day of week
             const date = new Date(year, month - 1, day);
             const dayOfWeek = date.getDay();
             
+            // Tamil month (based on Sun's position)
+            const tamilMonthIndex = Math.floor(sunLong / 30) % 12;
+            const tamilMonth = TAMIL_MONTHS[tamilMonthIndex];
+            
+            // Samvatsara (60-year cycle, approximate)
+            const samvatsaraIndex = (year - 1987) % 60; // 1987 was Prabhava
+            const samvatsara = SAMVATSARAS[samvatsaraIndex >= 0 ? samvatsaraIndex : samvatsaraIndex + 60];
+            
+            // Ritu (Season)
+            const rituIndex = Math.floor(tamilMonthIndex / 2);
+            const ritu = RITUS[rituIndex];
+            
+            // Ayana
+            const ayana = (tamilMonthIndex >= 3 && tamilMonthIndex <= 8) 
+                ? { tamil: 'தக்ஷிணாயனம்', english: 'Dakshinayana' }
+                : { tamil: 'உத்தராயணம்', english: 'Uttarayana' };
+            
             return {
                 tithi: {
                     ...TITHIS[tithiIndex],
                     number: tithiIndex + 1,
-                    pakpiNameTamil: paksha === 'shukla' ? 'சுக்ல' : 'கிருஷ்ண',
-                    pakshaNameEnglish: paksha === 'shukla' ? 'Shukla' : 'Krishna'
+                    pakshNameTamil: paksha === 'shukla' ? 'சுக்ல' : 'கிருஷ்ண',
+                    pakshaNameEnglish: paksha === 'shukla' ? 'Shukla' : 'Krishna',
+                    endTime: tithiEndTime
                 },
-                nakshatra: NAKSHATRAS[nakshatraIndex],
-                yoga: YOGAS[yogaIndex],
+                nakshatra: {
+                    ...NAKSHATRAS[nakshatraIndex],
+                    endTime: nakshatraEndTime
+                },
+                yoga: {
+                    ...YOGAS[yogaIndex],
+                    endTime: yogaEndTime
+                },
                 karana: KARANAS[karanaIndex],
                 paksha: {
                     tamil: paksha === 'shukla' ? 'சுக்ல பக்ஷம்' : 'கிருஷ்ண பக்ஷம்',
@@ -1069,8 +1144,31 @@
                 day: {
                     tamil: TAMIL_DAYS[dayOfWeek],
                     english: ENGLISH_DAYS[dayOfWeek]
-                }
+                },
+                tamilMonth: tamilMonth,
+                samvatsara: samvatsara,
+                ritu: ritu,
+                ayana: ayana
             };
+        }
+        
+        // Helper to calculate end time
+        function calculateEndTime(currentHour, currentMinute, hoursToAdd) {
+            let totalMinutes = currentHour * 60 + currentMinute + Math.round(hoursToAdd * 60);
+            let dayOffset = '';
+            
+            if (totalMinutes >= 24 * 60) {
+                totalMinutes -= 24 * 60;
+                dayOffset = '+';
+            }
+            if (totalMinutes < 0) {
+                totalMinutes += 24 * 60;
+            }
+            
+            const endHour = Math.floor(totalMinutes / 60);
+            const endMinute = Math.round(totalMinutes % 60);
+            
+            return formatTimeObj({ hour: endHour, minute: endMinute }) + dayOffset;
         }
         
         // Rahu Kalam segment by day of week (0=Sunday, 1=Monday, etc.)
@@ -1133,8 +1231,40 @@
             const panchang = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
             const rahuKalam = calculateRahuKalam(currentLocation, localDate);
             const isRahuNow = isRahuKalamNow(rahuKalam, localDate);
+            const loc = LOCATIONS[currentLocation];
             
             return `
+                <div class="sankalpam-box">
+                    <div class="sankalpam-title">🙏 சங்கல்பம் / Sankalpam</div>
+                    <div class="sankalpam-text">
+                        <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
+                        <span class="highlight">${panchang.ayana.tamil}</span>,
+                        <span class="highlight">${panchang.ritu.tamil}</span>,
+                        <span class="highlight">${panchang.tamilMonth.tamil}</span> மாசே,
+                        <span class="highlight">${panchang.paksha.tamil}</span>,
+                        <span class="highlight">${panchang.tithi.pakshNameTamil} ${panchang.tithi.tamil}</span> திதௌ,
+                        <span class="highlight">${panchang.day.tamil}</span> வாஸர,
+                        <span class="highlight">${panchang.nakshatra.tamil}</span> நக்ஷத்ரே,
+                        <span class="highlight">${panchang.yoga.tamil}</span> யோகே,
+                        <span class="highlight">${panchang.karana.tamil}</span> கரணே,
+                        ஏவங்குண விசேஷண விசிஷ்டாயாம் சுபதிதௌ,
+                        <span class="highlight">${loc.name}</span> க்ஷேத்ரே...
+                    </div>
+                    <div class="sankalpam-english">
+                        In the year <span class="highlight">${panchang.samvatsara}</span>,
+                        during <span class="highlight">${panchang.ayana.english}</span>,
+                        in <span class="highlight">${panchang.ritu.english}</span>,
+                        month of <span class="highlight">${panchang.tamilMonth.english}</span>,
+                        <span class="highlight">${panchang.paksha.english}</span>,
+                        on <span class="highlight">${panchang.tithi.pakshaNameEnglish} ${panchang.tithi.english}</span>,
+                        <span class="highlight">${panchang.day.english}</span>,
+                        star <span class="highlight">${panchang.nakshatra.english}</span>,
+                        yoga <span class="highlight">${panchang.yoga.english}</span>,
+                        karana <span class="highlight">${panchang.karana.english}</span>,
+                        at <span class="highlight">${loc.name}</span>...
+                    </div>
+                </div>
+                
                 <div class="panchang-grid">
                     <div class="panchang-item">
                         <div class="label">கிழமை / Day</div>
@@ -1143,18 +1273,21 @@
                     </div>
                     <div class="panchang-item">
                         <div class="label">திதி / Tithi</div>
-                        <div class="value-tamil">${panchang.tithi.pakpiNameTamil}-${panchang.tithi.tamil}</div>
+                        <div class="value-tamil">${panchang.tithi.pakshNameTamil}-${panchang.tithi.tamil}</div>
                         <div class="value-english">${panchang.tithi.pakshaNameEnglish}-${panchang.tithi.english}</div>
+                        <div class="end-time">till ${panchang.tithi.endTime}</div>
                     </div>
                     <div class="panchang-item">
                         <div class="label">நட்சத்திரம் / Nakshatra</div>
                         <div class="value-tamil">${panchang.nakshatra.tamil}</div>
                         <div class="value-english">${panchang.nakshatra.english}</div>
+                        <div class="end-time">till ${panchang.nakshatra.endTime}</div>
                     </div>
                     <div class="panchang-item">
                         <div class="label">யோகம் / Yoga</div>
                         <div class="value-tamil">${panchang.yoga.tamil}</div>
                         <div class="value-english">${panchang.yoga.english}</div>
+                        <div class="end-time">till ${panchang.yoga.endTime}</div>
                     </div>
                     <div class="panchang-item">
                         <div class="label">கரணம் / Karana</div>
@@ -1162,21 +1295,19 @@
                         <div class="value-english">${panchang.karana.english}</div>
                     </div>
                     <div class="panchang-item">
-                        <div class="label">பக்ஷம் / Paksha</div>
-                        <div class="value-tamil">${panchang.paksha.tamil}</div>
-                        <div class="value-english">${panchang.paksha.english}</div>
+                        <div class="label">மாதம் / Month</div>
+                        <div class="value-tamil">${panchang.tamilMonth.tamil}</div>
+                        <div class="value-english">${panchang.tamilMonth.english}</div>
                     </div>
-                </div>
-                <div class="rahu-kalam-box ${isRahuNow ? 'active' : ''}">
-                    <div class="rahu-header">
-                        <span class="rahu-icon">☊</span>
-                        <span class="rahu-title">ராகு காலம் / Rahu Kalam</span>
-                        ${isRahuNow ? '<span class="rahu-warning">⚠️ NOW</span>' : ''}
+                    <div class="panchang-item ${isRahuNow ? 'rahu-active' : ''}">
+                        <div class="label">☊ ராகு காலம் / Rahu Kalam</div>
+                        <div class="value-tamil">${rahuKalam.start} - ${rahuKalam.end}</div>
+                        <div class="value-english">${isRahuNow ? '⚠️ Active Now!' : `🌅 ${rahuKalam.sunrise} | 🌇 ${rahuKalam.sunset}`}</div>
                     </div>
-                    <div class="rahu-time">${rahuKalam.start} - ${rahuKalam.end}</div>
-                    <div class="sun-times">
-                        <span>🌅 Sunrise: ${rahuKalam.sunrise}</span>
-                        <span>🌇 Sunset: ${rahuKalam.sunset}</span>
+                    <div class="panchang-item">
+                        <div class="label">சூரிய உதயம் / Sunrise</div>
+                        <div class="value-tamil">${rahuKalam.sunrise}</div>
+                        <div class="value-english">Sunset: ${rahuKalam.sunset}</div>
                     </div>
                 </div>
             `;
