@@ -210,7 +210,7 @@
     <div class="container">
         <div class="header">
             <h1>🕉️ Hora & Lagna Calculator</h1>
-            <div class="subtitle">Vedic Planetary Hours & Rising Signs - Calculated Locally</div>
+            <div class="subtitle">ஹோரை & லக்னம் | Vedic Planetary Hours & Rising Signs</div>
             <div class="location" id="location-display">📍 Loading...</div>
             <div class="time" id="datetime-display">📅 Loading...</div>
         </div>
@@ -286,35 +286,35 @@
             sydney: { name: "Sydney, Australia", lat: -33.8688, lng: 151.2093, tz: "Australia/Sydney" }
         };
 
-        // Planet data
+        // Planet data with Tamil names
         const PLANETS = {
-            Sun: { emoji: "☀️", nature: "Vigorous", quality: "neutral" },
-            Moon: { emoji: "🌙", nature: "Gentle", quality: "good" },
-            Mars: { emoji: "♂️", nature: "Aggressive", quality: "avoid" },
-            Mercury: { emoji: "☿", nature: "Quick", quality: "good" },
-            Jupiter: { emoji: "♃", nature: "Fruitful", quality: "good" },
-            Venus: { emoji: "♀️", nature: "Beneficial", quality: "good" },
-            Saturn: { emoji: "♄", nature: "Sluggish", quality: "avoid" }
+            Sun: { emoji: "☀️", nature: "Vigorous", quality: "neutral", tamil: "சூரியன்" },
+            Moon: { emoji: "🌙", nature: "Gentle", quality: "good", tamil: "சந்திரன்" },
+            Mars: { emoji: "♂️", nature: "Aggressive", quality: "avoid", tamil: "செவ்வாய்" },
+            Mercury: { emoji: "☿", nature: "Quick", quality: "good", tamil: "புதன்" },
+            Jupiter: { emoji: "♃", nature: "Fruitful", quality: "good", tamil: "குரு" },
+            Venus: { emoji: "♀️", nature: "Beneficial", quality: "good", tamil: "சுக்கிரன்" },
+            Saturn: { emoji: "♄", nature: "Sluggish", quality: "avoid", tamil: "சனி" }
         };
 
         // Day rulers and hora sequence
         const DAY_RULERS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
         const HORA_SEQUENCE = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"];
 
-        // Zodiac signs (Rashis) for Lagna calculation
+        // Zodiac signs (Rashis) for Lagna calculation with Tamil names
         const RASHIS = [
-            { name: "Aries", sanskrit: "Mesha (मेष)", symbol: "♈", ruler: "Mars", element: "fire", quality: "Cardinal" },
-            { name: "Taurus", sanskrit: "Vrishabha (वृषभ)", symbol: "♉", ruler: "Venus", element: "earth", quality: "Fixed" },
-            { name: "Gemini", sanskrit: "Mithuna (मिथुन)", symbol: "♊", ruler: "Mercury", element: "air", quality: "Mutable" },
-            { name: "Cancer", sanskrit: "Karka (कर्क)", symbol: "♋", ruler: "Moon", element: "water", quality: "Cardinal" },
-            { name: "Leo", sanskrit: "Simha (सिंह)", symbol: "♌", ruler: "Sun", element: "fire", quality: "Fixed" },
-            { name: "Virgo", sanskrit: "Kanya (कन्या)", symbol: "♍", ruler: "Mercury", element: "earth", quality: "Mutable" },
-            { name: "Libra", sanskrit: "Tula (तुला)", symbol: "♎", ruler: "Venus", element: "air", quality: "Cardinal" },
-            { name: "Scorpio", sanskrit: "Vrishchika (वृश्चिक)", symbol: "♏", ruler: "Mars", element: "water", quality: "Fixed" },
-            { name: "Sagittarius", sanskrit: "Dhanu (धनु)", symbol: "♐", ruler: "Jupiter", element: "fire", quality: "Mutable" },
-            { name: "Capricorn", sanskrit: "Makara (मकर)", symbol: "♑", ruler: "Saturn", element: "earth", quality: "Cardinal" },
-            { name: "Aquarius", sanskrit: "Kumbha (कुम्भ)", symbol: "♒", ruler: "Saturn", element: "air", quality: "Fixed" },
-            { name: "Pisces", sanskrit: "Meena (मीन)", symbol: "♓", ruler: "Jupiter", element: "water", quality: "Mutable" }
+            { name: "Aries", sanskrit: "Mesha (मेष)", tamil: "மேஷம்", symbol: "♈", ruler: "Mars", rulerTamil: "செவ்வாய்", element: "fire", quality: "Cardinal" },
+            { name: "Taurus", sanskrit: "Vrishabha (वृषभ)", tamil: "ரிஷபம்", symbol: "♉", ruler: "Venus", rulerTamil: "சுக்கிரன்", element: "earth", quality: "Fixed" },
+            { name: "Gemini", sanskrit: "Mithuna (मिथुन)", tamil: "மிதுனம்", symbol: "♊", ruler: "Mercury", rulerTamil: "புதன்", element: "air", quality: "Mutable" },
+            { name: "Cancer", sanskrit: "Karka (कर्क)", tamil: "கடகம்", symbol: "♋", ruler: "Moon", rulerTamil: "சந்திரன்", element: "water", quality: "Cardinal" },
+            { name: "Leo", sanskrit: "Simha (सिंह)", tamil: "சிம்மம்", symbol: "♌", ruler: "Sun", rulerTamil: "சூரியன்", element: "fire", quality: "Fixed" },
+            { name: "Virgo", sanskrit: "Kanya (कन्या)", tamil: "கன்னி", symbol: "♍", ruler: "Mercury", rulerTamil: "புதன்", element: "earth", quality: "Mutable" },
+            { name: "Libra", sanskrit: "Tula (तुला)", tamil: "துலாம்", symbol: "♎", ruler: "Venus", rulerTamil: "சுக்கிரன்", element: "air", quality: "Cardinal" },
+            { name: "Scorpio", sanskrit: "Vrishchika (वृश्चिक)", tamil: "விருச்சிகம்", symbol: "♏", ruler: "Mars", rulerTamil: "செவ்வாய்", element: "water", quality: "Fixed" },
+            { name: "Sagittarius", sanskrit: "Dhanu (धनु)", tamil: "தனுசு", symbol: "♐", ruler: "Jupiter", rulerTamil: "குரு", element: "fire", quality: "Mutable" },
+            { name: "Capricorn", sanskrit: "Makara (मकर)", tamil: "மகரம்", symbol: "♑", ruler: "Saturn", rulerTamil: "சனி", element: "earth", quality: "Cardinal" },
+            { name: "Aquarius", sanskrit: "Kumbha (कुम्भ)", tamil: "கும்பம்", symbol: "♒", ruler: "Saturn", rulerTamil: "சனி", element: "air", quality: "Fixed" },
+            { name: "Pisces", sanskrit: "Meena (मीन)", tamil: "மீனம்", symbol: "♓", ruler: "Jupiter", rulerTamil: "குரு", element: "water", quality: "Mutable" }
         ];
 
         let currentLocation = "austin";
@@ -725,41 +725,42 @@
                     <div class="current-hora ${current.quality}">
                         <div class="planet">${current.emoji}</div>
                         <div class="name">${current.planet} Hora</div>
+                        <div class="rashi-sanskrit">${current.tamil} ஹோரை</div>
                         <div class="time-range">${current.start} - ${current.end}</div>
                         <div class="quality">${current.quality === 'good' ? '✅ Auspicious' : current.quality === 'avoid' ? '⚠️ Avoid' : '🔸 Neutral'}</div>
-                        ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} (${next.start})</p>` : ''}
+                        ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} / ${next.tamil} (${next.start})</p>` : ''}
                     </div>
                     
                     <div class="current-lagna">
                         <div class="rashi-symbol">${currentLagna.symbol}</div>
                         <div class="rashi-name">${currentLagna.name} Lagna</div>
-                        <div class="rashi-sanskrit">${currentLagna.sanskrit}</div>
+                        <div class="rashi-sanskrit">${currentLagna.tamil} லக்னம்</div>
                         <div class="time-range">${currentLagna.start} - ${currentLagna.end}</div>
-                        <div class="element">${currentLagna.element.charAt(0).toUpperCase() + currentLagna.element.slice(1)} Sign • Ruled by ${currentLagna.ruler}</div>
-                        ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} (${nextLagna.start})</p>` : ''}
+                        <div class="element">${currentLagna.element.charAt(0).toUpperCase() + currentLagna.element.slice(1)} Sign • ${currentLagna.ruler} / ${currentLagna.rulerTamil}</div>
+                        ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} / ${nextLagna.tamil} (${nextLagna.start})</p>` : ''}
                     </div>
                 </div>
                 
                 <div class="jupiter-box">
-                    <h2>♃ Jupiter Hora Times (Most Auspicious)</h2>
+                    <h2>♃ Jupiter / குரு Hora Times (Most Auspicious)</h2>
                     <ul>
                         ${jupiterHoras.map(h => `<li>${h.start} - ${h.end}</li>`).join('')}
                     </ul>
                 </div>
                 
                 <div class="lagna-schedule">
-                    <h2>🌟 Today's Lagna (Ascendant) Schedule</h2>
+                    <h2>🌟 Today's Lagna (Ascendant) Schedule / லக்ன அட்டவணை</h2>
                     <table>
-                        <thead><tr><th>#</th><th>Lagna</th><th>Sanskrit</th><th>Time</th><th>Element</th><th>Ruler</th></tr></thead>
+                        <thead><tr><th>#</th><th>Lagna</th><th>Tamil</th><th>Time</th><th>Element</th><th>Ruler</th></tr></thead>
                         <tbody>
                             ${lagnaSchedule.map((l, i) => `
                                 <tr class="${l.element} ${l.index === currentLagna.index ? 'lagna-current' : ''}">
                                     <td>${i + 1}</td>
                                     <td>${l.symbol} ${l.name}</td>
-                                    <td>${l.sanskrit.split(' ')[0]}</td>
+                                    <td>${l.tamil}</td>
                                     <td>${l.start} - ${l.end}</td>
                                     <td>${l.element.charAt(0).toUpperCase() + l.element.slice(1)}</td>
-                                    <td>${l.ruler}</td>
+                                    <td>${l.ruler} / ${l.rulerTamil}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -767,14 +768,15 @@
                 </div>
                 
                 <div class="schedule">
-                    <h2>☀️ Day Hora (Sunrise ${data.sunrise} → Sunset ${data.sunset})</h2>
+                    <h2>☀️ Day Hora / பகல் ஹோரை (Sunrise ${data.sunrise} → Sunset ${data.sunset})</h2>
                     <table>
-                        <thead><tr><th>#</th><th>Planet</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
+                        <thead><tr><th>#</th><th>Planet / கிரகம்</th><th>Tamil</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
                         <tbody>
                             ${data.schedule.slice(0, 12).map((h, i) => `
                                 <tr class="${h.quality} ${i === index ? 'current' : ''}">
                                     <td>${i + 1}</td>
                                     <td>${h.emoji} ${h.planet}</td>
+                                    <td>${h.tamil}</td>
                                     <td>${h.start} - ${h.end}</td>
                                     <td>${h.nature}</td>
                                     <td style="font-weight: bold;">${h.quality === 'good' ? '✓' : h.quality === 'avoid' ? '✗' : '~'}</td>
@@ -785,14 +787,15 @@
                 </div>
                 
                 <div class="schedule">
-                    <h2>🌙 Night Hora (Sunset → Next Sunrise)</h2>
+                    <h2>🌙 Night Hora / இரவு ஹோரை (Sunset → Next Sunrise)</h2>
                     <table>
-                        <thead><tr><th>#</th><th>Planet</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
+                        <thead><tr><th>#</th><th>Planet / கிரகம்</th><th>Tamil</th><th>Time</th><th>Nature</th><th>Status</th></tr></thead>
                         <tbody>
                             ${data.schedule.slice(12).map((h, i) => `
                                 <tr class="${h.quality} ${i + 12 === index ? 'current' : ''}">
                                     <td>${i + 1}</td>
                                     <td>${h.emoji} ${h.planet}</td>
+                                    <td>${h.tamil}</td>
                                     <td>${h.start} - ${h.end}</td>
                                     <td>${h.nature}</td>
                                     <td style="font-weight: bold;">${h.quality === 'good' ? '✓' : h.quality === 'avoid' ? '✗' : '~'}</td>
