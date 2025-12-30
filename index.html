@@ -309,6 +309,60 @@
             opacity: 0.9;
             margin-top: 3px;
         }
+        .rahu-kalam-box {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .rahu-kalam-box.active {
+            background: rgba(239, 68, 68, 0.3);
+            border: 2px solid #ef4444;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .rahu-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .rahu-icon {
+            font-size: 1.3em;
+        }
+        .rahu-title {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .rahu-warning {
+            background: #ef4444;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .rahu-time {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .sun-times {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
         
         .schedule {
             background: rgba(255,255,255,0.95);
@@ -1019,9 +1073,66 @@
             };
         }
         
+        // Rahu Kalam segment by day of week (0=Sunday, 1=Monday, etc.)
+        // Day divided into 8 parts from sunrise to sunset
+        const RAHU_KALAM_SEGMENTS = [7, 1, 6, 4, 5, 3, 2]; // Sun, Mon, Tue, Wed, Thu, Fri, Sat
+        
+        // Calculate Rahu Kalam time
+        function calculateRahuKalam(location, localDate) {
+            const loc = LOCATIONS[location];
+            const tzOffset = getTimezoneOffset(loc.tz);
+            
+            // Calculate sunrise and sunset
+            const sunTimes = calculateSunTimes(loc.lat, loc.lng, localDate.year, localDate.month, localDate.day);
+            const sunrise = utcHoursToLocalTime(sunTimes.sunrise, tzOffset);
+            const sunset = utcHoursToLocalTime(sunTimes.sunset, tzOffset);
+            
+            // Day duration in minutes
+            const sunriseMinutes = sunrise.hour * 60 + sunrise.minute;
+            const sunsetMinutes = sunset.hour * 60 + sunset.minute;
+            const dayDuration = sunsetMinutes - sunriseMinutes;
+            
+            // Each segment duration
+            const segmentDuration = dayDuration / 8;
+            
+            // Get Rahu Kalam segment for this day
+            const dayOfWeek = localDate.dayOfWeek;
+            const rahuSegment = RAHU_KALAM_SEGMENTS[dayOfWeek];
+            
+            // Calculate start and end times
+            const rahuStartMinutes = sunriseMinutes + (rahuSegment * segmentDuration);
+            const rahuEndMinutes = rahuStartMinutes + segmentDuration;
+            
+            const rahuStart = {
+                hour: Math.floor(rahuStartMinutes / 60),
+                minute: Math.round(rahuStartMinutes % 60)
+            };
+            const rahuEnd = {
+                hour: Math.floor(rahuEndMinutes / 60),
+                minute: Math.round(rahuEndMinutes % 60)
+            };
+            
+            return {
+                start: formatTimeObj(rahuStart),
+                end: formatTimeObj(rahuEnd),
+                startMinutes: rahuStartMinutes,
+                endMinutes: rahuEndMinutes,
+                sunrise: formatTimeObj(sunrise),
+                sunset: formatTimeObj(sunset)
+            };
+        }
+        
+        // Check if current time is during Rahu Kalam
+        function isRahuKalamNow(rahuKalam, localDate) {
+            const currentMinutes = localDate.hour * 60 + localDate.minute;
+            return currentMinutes >= rahuKalam.startMinutes && currentMinutes < rahuKalam.endMinutes;
+        }
+
         // Generate Panchang HTML
         function generatePanchangHTML(localDate) {
             const panchang = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
+            const rahuKalam = calculateRahuKalam(currentLocation, localDate);
+            const isRahuNow = isRahuKalamNow(rahuKalam, localDate);
             
             return `
                 <div class="panchang-grid">
@@ -1054,6 +1165,18 @@
                         <div class="label">பக்ஷம் / Paksha</div>
                         <div class="value-tamil">${panchang.paksha.tamil}</div>
                         <div class="value-english">${panchang.paksha.english}</div>
+                    </div>
+                </div>
+                <div class="rahu-kalam-box ${isRahuNow ? 'active' : ''}">
+                    <div class="rahu-header">
+                        <span class="rahu-icon">☊</span>
+                        <span class="rahu-title">ராகு காலம் / Rahu Kalam</span>
+                        ${isRahuNow ? '<span class="rahu-warning">⚠️ NOW</span>' : ''}
+                    </div>
+                    <div class="rahu-time">${rahuKalam.start} - ${rahuKalam.end}</div>
+                    <div class="sun-times">
+                        <span>🌅 Sunrise: ${rahuKalam.sunrise}</span>
+                        <span>🌇 Sunset: ${rahuKalam.sunset}</span>
                     </div>
                 </div>
             `;
