@@ -1105,16 +1105,35 @@
             const date = new Date(year, month - 1, day);
             const dayOfWeek = date.getDay();
             
-            // Tamil month (based on Sun's position)
-            const tamilMonthIndex = Math.floor(sunLong / 30) % 12;
+            // Solar Tamil month (based on Sun's position)
+            const solarMonthIndex = Math.floor(sunLong / 30) % 12;
+            
+            // Lunar month calculation (Amant/Purnimant system)
+            // The lunar month is named after the nakshatra where full moon occurs
+            // During Krishna Paksha (after full moon), we're in the latter half of the lunar month
+            // The lunar month is typically 1 position ahead during Krishna Paksha in late month
+            let lunarMonthIndex = solarMonthIndex;
+            
+            // Calculate approximate tithi to determine lunar month
+            // If we're in Krishna Paksha (tithi 15-30, i.e., after full moon)
+            // and Sun is past 15° in the sign, lunar month advances
+            const degreeInSign = sunLong % 30;
+            if (paksha === 'krishna' && degreeInSign > 10) {
+                lunarMonthIndex = (solarMonthIndex + 1) % 12;
+            }
+            
             const tamilMonth = {
-                ...TAMIL_MONTHS[tamilMonthIndex],
+                ...TAMIL_MONTHS[lunarMonthIndex],
+                solarMonth: TAMIL_MONTHS[solarMonthIndex],
                 sanskritVara: SANSKRIT_DAYS[dayOfWeek],
                 sanskritVaraEng: SANSKRIT_DAYS_ENG[dayOfWeek]
             };
             
-            // Samvatsara (60-year cycle, approximate)
-            const samvatsaraIndex = (year - 1987) % 60; // 1987 was Prabhava
+            // Samvatsara (60-year cycle)
+            // Hindu year (Chaitra) starts around April, so Jan-Mar use previous year
+            // Shaka 1947 (2025-26) = Vishvavasu (index 38)
+            const hinduYear = month < 4 ? year - 1 : year;
+            const samvatsaraIndex = (hinduYear - 1987) % 60; // 1987 was Prabhava
             const samvatsara = SAMVATSARAS[samvatsaraIndex >= 0 ? samvatsaraIndex : samvatsaraIndex + 60];
             
             // Ritu (Season)
@@ -1342,11 +1361,11 @@
             const daysDiff = Math.floor((currentDate - refDate) / 86400000);
             
             // Reference positions (sidereal longitude in degrees) for Dec 30, 2025
-            // Calibrated to actual Panchang data
+            // Calibrated to match Drik Panchang data for Jan 3, 2026
             // Mesha (Aries) = 0-30°, Mithuna (Gemini) = 60-90°, Dhanusu (Sagittarius) = 240-270°, Kumbam (Aquarius) = 300-330°
             const planetData = {
                 surya: { refLong: 254, rate: 0.9856 },      // Dhanusu (Sagittarius)
-                chandra: { refLong: 13, rate: 13.176 },     // Mesha (Aries) - Ashwini/Bharani border on Dec 30
+                chandra: { refLong: 22, rate: 13.176 },     // Calibrated to Drik Panchang Jan 3, 2026: Punarvasu/Mithuna
                 mangal: { refLong: 258, rate: 0.524 },      // Dhanusu (Sagittarius)
                 budha: { refLong: 251, rate: 1.2 },         // Dhanusu (Sagittarius)
                 guru: { refLong: 68, rate: 0.083 },         // Mithuna (Gemini) - entered ~Dec 6, 2025
