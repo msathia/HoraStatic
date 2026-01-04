@@ -1136,12 +1136,12 @@
             const samvatsaraIndex = (hinduYear - 1987) % 60; // 1987 was Prabhava
             const samvatsara = SAMVATSARAS[samvatsaraIndex >= 0 ? samvatsaraIndex : samvatsaraIndex + 60];
             
-            // Ritu (Season)
-            const rituIndex = Math.floor(tamilMonthIndex / 2);
+            // Ritu (Season) - based on solar month
+            const rituIndex = Math.floor(solarMonthIndex / 2);
             const ritu = RITUS[rituIndex];
             
-            // Ayana
-            const ayana = (tamilMonthIndex >= 3 && tamilMonthIndex <= 8) 
+            // Ayana - based on solar month
+            const ayana = (solarMonthIndex >= 3 && solarMonthIndex <= 8) 
                 ? { tamil: 'தக்ஷிணாயனம்', english: 'Dakshinayana' }
                 : { tamil: 'உத்தராயணம்', english: 'Uttarayana' };
             
