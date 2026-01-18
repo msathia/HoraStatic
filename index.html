@@ -1122,11 +1122,17 @@
                 lunarMonthIndex = (solarMonthIndex + 1) % 12;
             }
             
+            // Calculate Tamil date (day of the solar month)
+            // Sun moves ~0.9856° per day, so degree within sign ≈ day of month
+            const degreeInSolarSign = sunLong % 30;
+            const tamilDate = Math.floor(degreeInSolarSign / 0.9856) + 1;
+            
             const tamilMonth = {
                 ...TAMIL_MONTHS[lunarMonthIndex],
                 solarMonth: TAMIL_MONTHS[solarMonthIndex],
                 sanskritVara: SANSKRIT_DAYS[dayOfWeek],
-                sanskritVaraEng: SANSKRIT_DAYS_ENG[dayOfWeek]
+                sanskritVaraEng: SANSKRIT_DAYS_ENG[dayOfWeek],
+                tamilDate: tamilDate  // Day of the Tamil solar month
             };
             
             // Samvatsara (60-year cycle)
@@ -1265,7 +1271,7 @@
                         <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
                         <span class="highlight">${panchang.ayana.tamil}</span>,
                         <span class="highlight">${panchang.ritu.tamil}</span>,
-                        <span class="highlight">${panchang.tamilMonth.sanskrit}</span> மாசே,
+                        <span class="highlight">${panchang.tamilMonth.solarMonth.tamil} மாசம் ${panchang.tamilMonth.tamilDate} ஆம் நாள்</span>,
                         <span class="highlight">${panchang.paksha.tamil}</span>,
                         <span class="highlight">${panchang.tithi.pakshNameTamil} ${panchang.tithi.tamil}</span> திதௌ,
                         <span class="highlight">${panchang.tamilMonth.sanskritVara}</span> வாஸரே,
@@ -1279,7 +1285,7 @@
                         In the year <span class="highlight">${panchang.samvatsara}</span>,
                         during <span class="highlight">${panchang.ayana.english}</span>,
                         in <span class="highlight">${panchang.ritu.english}</span>,
-                        month of <span class="highlight">${panchang.tamilMonth.sanskritEng}</span>,
+                        <span class="highlight">${panchang.tamilMonth.solarMonth.english} ${panchang.tamilMonth.tamilDate}</span>,
                         <span class="highlight">${panchang.paksha.english}</span>,
                         on <span class="highlight">${panchang.tithi.pakshaNameEnglish} ${panchang.tithi.english}</span>,
                         <span class="highlight">${panchang.tamilMonth.sanskritVaraEng}</span> Vasara,
@@ -1320,9 +1326,9 @@
                         <div class="value-english">${panchang.karana.english}</div>
                     </div>
                     <div class="panchang-item">
-                        <div class="label">மாதம் / Month</div>
-                        <div class="value-tamil">${panchang.tamilMonth.tamil}</div>
-                        <div class="value-english">${panchang.tamilMonth.english}</div>
+                        <div class="label">தமிழ் தேதி / Tamil Date</div>
+                        <div class="value-tamil">${panchang.tamilMonth.solarMonth.tamil} ${panchang.tamilMonth.tamilDate}</div>
+                        <div class="value-english">${panchang.tamilMonth.solarMonth.english} ${panchang.tamilMonth.tamilDate}</div>
                     </div>
                     <div class="panchang-item ${isRahuNow ? 'rahu-active' : ''}">
                         <div class="label">☊ ராகு காலம் / Rahu Kalam</div>
@@ -1491,8 +1497,11 @@
             
             // Update header with proper timezone display
             document.getElementById('location-display').textContent = `📍 ${loc.name}`;
-            document.getElementById('datetime-display').textContent = 
-                `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}`;
+            // Get panchang for Tamil date display in header
+            const panchangHeader = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
+            
+            document.getElementById('datetime-display').innerHTML = 
+                `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}<br><span style="color: #fbbf24; font-weight: 500;">🗓️ ${panchangHeader.tamilMonth.solarMonth.tamil} ${panchangHeader.tamilMonth.tamilDate} (${panchangHeader.tamilMonth.solarMonth.english} ${panchangHeader.tamilMonth.tamilDate})</span>`;
             
             // Calculate Hora schedule
             const data = calculateHoraSchedule(currentLocation);
