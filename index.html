@@ -1802,6 +1802,37 @@
         
         // Update every minute
         setInterval(render, 60000);
+        
+        // Load Astronomy Engine asynchronously
+        function loadAstronomyEngine() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js';
+            script.async = true;
+            script.onload = function() {
+                console.log('Astronomy Engine loaded successfully');
+                // Update the flag and re-render with precise calculations
+                if (typeof Astronomy !== 'undefined') {
+                    try {
+                        const testDate = Astronomy.MakeTime(new Date());
+                        const testSun = Astronomy.SunPosition(testDate);
+                        if (testSun && typeof testSun.elon === 'number') {
+                            useAstronomyEngine = true;
+                            console.log('Astronomy Engine verified, re-rendering with precise ephemeris');
+                            render();
+                        }
+                    } catch (e) {
+                        console.log('Astronomy Engine test failed:', e);
+                    }
+                }
+            };
+            script.onerror = function() {
+                console.log('Failed to load Astronomy Engine, using fallback calculations');
+            };
+            document.body.appendChild(script);
+        }
+        
+        // Load the library after page renders
+        setTimeout(loadAstronomyEngine, 100);
     </script>
 </body>
 </html>
