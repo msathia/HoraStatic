@@ -1054,20 +1054,26 @@
         
         // Calculate Panchang details with ending times using Astronomy Engine
         function calculatePanchang(year, month, day, hour, minute) {
-            // Create date object for the exact time
-            const date = new Date(year, month - 1, day, hour, minute);
-            
-            // Get precise planetary positions using Astronomy Engine
-            const planets = getAllPlanetaryPositions(year, month, day, hour, minute);
-            const sunLong = planets.surya.longitude;
-            const moonLong = planets.chandra.longitude;
-            
-            // Moon longitude is already calculated for the exact time
-            const adjustedMoonLong = moonLong;
-            
-            // Get Moon's actual daily motion for accurate end time calculations
-            const moonDailyMotion = getMoonDailyMotion(date);
-            const moonSpeed = moonDailyMotion / 24; // degrees per hour
+            try {
+                // Create date object for the exact time
+                const date = new Date(year, month - 1, day, hour, minute);
+                
+                // Get precise planetary positions
+                const planets = getAllPlanetaryPositions(year, month, day, hour, minute);
+                const sunLong = planets.surya ? planets.surya.longitude : 270;
+                const moonLong = planets.chandra ? planets.chandra.longitude : 270;
+                
+                // Moon longitude is already calculated for the exact time
+                const adjustedMoonLong = moonLong;
+                
+                // Get Moon's actual daily motion for accurate end time calculations
+                let moonDailyMotion = 13.176; // Default
+                try {
+                    moonDailyMotion = getMoonDailyMotion(date);
+                } catch (e) {
+                    console.log('Using default moon motion');
+                }
+                const moonSpeed = moonDailyMotion / 24; // degrees per hour
             
             // Tithi: Angular distance between Moon and Sun / 12
             let tithiAngle = adjustedMoonLong - sunLong;
@@ -1190,6 +1196,22 @@
                 ritu: ritu,
                 ayana: ayana
             };
+            } catch (e) {
+                console.error('Error in calculatePanchang:', e);
+                // Return a minimal valid object to prevent page crash
+                return {
+                    tithi: { tamil: 'Error', english: 'Error', number: 1, pakshNameTamil: '', pakshaNameEnglish: '', endTime: '' },
+                    nakshatra: { tamil: 'Error', english: 'Error', endTime: '' },
+                    yoga: { tamil: 'Error', english: 'Error', endTime: '' },
+                    karana: { tamil: 'Error', english: 'Error' },
+                    paksha: { tamil: '', english: '' },
+                    day: { tamil: TAMIL_DAYS[new Date().getDay()], english: ENGLISH_DAYS[new Date().getDay()] },
+                    tamilMonth: { tamil: '', english: '', solarMonth: { tamil: '', english: '' }, tamilDate: 0, sanskritVara: '', sanskritVaraEng: '' },
+                    samvatsara: '',
+                    ritu: { tamil: '', english: '' },
+                    ayana: { tamil: '', english: '' }
+                };
+            }
         }
         
         // Helper to calculate end time
@@ -1370,8 +1392,22 @@
 
         // ==================== ASTRONOMY ENGINE EPHEMERIS ====================
         
-        // Check if Astronomy Engine is loaded
-        const useAstronomyEngine = typeof Astronomy !== 'undefined';
+        // Check if Astronomy Engine is loaded and working
+        let useAstronomyEngine = false;
+        try {
+            if (typeof Astronomy !== 'undefined' && Astronomy.MakeTime) {
+                // Test if it works
+                const testDate = Astronomy.MakeTime(new Date());
+                const testSun = Astronomy.SunPosition(testDate);
+                if (testSun && typeof testSun.elon === 'number') {
+                    useAstronomyEngine = true;
+                    console.log('Astronomy Engine loaded successfully');
+                }
+            }
+        } catch (e) {
+            console.log('Astronomy Engine not available, using fallback calculations');
+            useAstronomyEngine = false;
+        }
         
         // Get precise Lahiri Ayanamsa for a given date
         function getPreciseAyanamsa(date) {
