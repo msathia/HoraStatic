@@ -1370,6 +1370,9 @@
 
         // ==================== ASTRONOMY ENGINE EPHEMERIS ====================
         
+        // Check if Astronomy Engine is loaded
+        const useAstronomyEngine = typeof Astronomy !== 'undefined';
+        
         // Get precise Lahiri Ayanamsa for a given date
         function getPreciseAyanamsa(date) {
             // Lahiri Ayanamsa: 23°51'11" on Jan 1, 2000 (23.853°)
@@ -1379,51 +1382,74 @@
             return 23.853 + (yearsDiff * 0.01397);
         }
         
-        // Get ecliptic longitude from equatorial coordinates using Astronomy Engine
+        // Get ecliptic longitude using Astronomy Engine
         function getEclipticLongitude(body, date) {
+            if (!useAstronomyEngine) return getFallbackLongitude(body, date);
+            
             try {
                 const astroDate = Astronomy.MakeTime(date);
-                let equ, ecl;
                 
                 if (body === 'Sun') {
-                    equ = Astronomy.Equator(body, astroDate, null, false, true);
-                    ecl = Astronomy.Ecliptic(equ.vec);
-                    return ecl.elon;
+                    // Use SunPosition for the Sun
+                    const sunPos = Astronomy.SunPosition(astroDate);
+                    return sunPos.elon;
                 } else if (body === 'Moon') {
-                    equ = Astronomy.Equator(body, astroDate, null, false, true);
-                    ecl = Astronomy.Ecliptic(equ.vec);
+                    // Use GeoMoon for the Moon
+                    const moonVec = Astronomy.GeoMoon(astroDate);
+                    const ecl = Astronomy.Ecliptic(moonVec);
                     return ecl.elon;
                 } else {
-                    // For other planets
-                    equ = Astronomy.Equator(body, astroDate, null, false, true);
-                    ecl = Astronomy.Ecliptic(equ.vec);
+                    // For other planets, use HelioVector then convert
+                    const geo = Astronomy.GeoVector(body, astroDate, true);
+                    const ecl = Astronomy.Ecliptic(geo);
                     return ecl.elon;
                 }
             } catch (e) {
-                console.error(`Error calculating ${body} position:`, e);
-                return 0;
+                console.error(`Astronomy Engine error for ${body}:`, e);
+                return getFallbackLongitude(body, date);
             }
         }
         
-        // Get sidereal longitude (tropical - ayanamsa)
-        function getSiderealLongitude(body, date) {
-            const tropicalLong = getEclipticLongitude(body, date);
+        // Fallback longitude calculation (simple linear model)
+        function getFallbackLongitude(body, date) {
+            const refDate = new Date(2025, 11, 30); // Dec 30, 2025
+            const daysDiff = (date - refDate) / (24 * 60 * 60 * 1000);
             const ayanamsa = getPreciseAyanamsa(date);
-            let siderealLong = tropicalLong - ayanamsa;
-            // Normalize to 0-360
-            siderealLong = ((siderealLong % 360) + 360) % 360;
-            return siderealLong;
+            
+            // Reference tropical positions + daily motion
+            const fallbackData = {
+                'Sun': { ref: 256 + ayanamsa, rate: 0.9856 },
+                'Moon': { ref: 16 + ayanamsa, rate: 13.176 },
+                'Mars': { ref: 258 + ayanamsa, rate: 0.524 },
+                'Mercury': { ref: 251 + ayanamsa, rate: 1.2 },
+                'Jupiter': { ref: 68 + ayanamsa, rate: 0.083 },
+                'Venus': { ref: 263 + ayanamsa, rate: 1.1 },
+                'Saturn': { ref: 320 + ayanamsa, rate: 0.033 }
+            };
+            
+            const data = fallbackData[body];
+            if (!data) return 0;
+            
+            let longitude = data.ref + (daysDiff * data.rate);
+            return ((longitude % 360) + 360) % 360;
         }
         
         // Get Moon's daily motion (for accurate nakshatra end time)
         function getMoonDailyMotion(date) {
-            const date1 = new Date(date.getTime());
-            const date2 = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-            const long1 = getEclipticLongitude('Moon', date1);
-            const long2 = getEclipticLongitude('Moon', date2);
-            let motion = long2 - long1;
-            if (motion < 0) motion += 360;
-            return motion; // degrees per day
+            if (!useAstronomyEngine) return 13.176; // Average motion fallback
+            
+            try {
+                const date1 = new Date(date.getTime());
+                const date2 = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+                const long1 = getEclipticLongitude('Moon', date1);
+                const long2 = getEclipticLongitude('Moon', date2);
+                let motion = long2 - long1;
+                if (motion < 0) motion += 360;
+                if (motion > 20) motion = 13.176; // Sanity check
+                return motion;
+            } catch (e) {
+                return 13.176; // Fallback to average
+            }
         }
         
         // Calculate all planetary positions using Astronomy Engine (Sidereal/Vedic)
@@ -1444,7 +1470,7 @@
                 shani: 'Saturn'
             };
             
-            // Calculate positions for main planets using Astronomy Engine
+            // Calculate positions for main planets
             for (const [key, body] of Object.entries(bodyMap)) {
                 try {
                     const tropicalLong = getEclipticLongitude(body, date);
@@ -1463,59 +1489,30 @@
                 }
             }
             
-            // Calculate Rahu (Mean Lunar Node) - Astronomy Engine provides this
-            try {
-                const astroDate = Astronomy.MakeTime(date);
-                const moonNode = Astronomy.MoonNodesAfter(astroDate);
-                // Use True Lunar Node approximation
-                // Rahu moves backwards at about 0.053° per day (19.3° per year)
-                const refDate = new Date(2025, 11, 30);
-                const daysDiff = (date - refDate) / (24 * 60 * 60 * 1000);
-                let rahuLong = 318 - (daysDiff * 0.053); // Retrograde motion
-                rahuLong = ((rahuLong % 360) + 360) % 360;
-                const rahuRashi = Math.floor(rahuLong / 30);
-                
-                positions.rahu = {
-                    ...GRAHAS.rahu,
-                    rashi: rahuRashi,
-                    longitude: rahuLong
-                };
-                
-                // Ketu is always opposite Rahu
-                let ketuLong = (rahuLong + 180) % 360;
-                const ketuRashi = Math.floor(ketuLong / 30);
-                
-                positions.ketu = {
-                    ...GRAHAS.ketu,
-                    rashi: ketuRashi,
-                    longitude: ketuLong
-                };
-            } catch (e) {
-                console.error('Error calculating Rahu/Ketu:', e);
-            }
+            // Calculate Rahu/Ketu (lunar nodes) - use simple calculation
+            const refDate = new Date(2025, 11, 30);
+            const daysDiff = (date - refDate) / (24 * 60 * 60 * 1000);
+            let rahuLong = 318 - (daysDiff * 0.053); // Retrograde motion
+            rahuLong = ((rahuLong % 360) + 360) % 360;
+            const rahuRashi = Math.floor(rahuLong / 30);
+            
+            positions.rahu = {
+                ...GRAHAS.rahu,
+                rashi: rahuRashi,
+                longitude: rahuLong
+            };
+            
+            // Ketu is always opposite Rahu
+            let ketuLong = (rahuLong + 180) % 360;
+            const ketuRashi = Math.floor(ketuLong / 30);
+            
+            positions.ketu = {
+                ...GRAHAS.ketu,
+                rashi: ketuRashi,
+                longitude: ketuLong
+            };
             
             return positions;
-        }
-        
-        // Get precise sunrise/sunset using Astronomy Engine
-        function getPreciseSunTimes(lat, lng, date) {
-            try {
-                const observer = Astronomy.MakeObserver(lat, lng, 0);
-                const astroDate = Astronomy.MakeTime(date);
-                
-                // Search for sunrise
-                const sunrise = Astronomy.SearchRiseSet('Sun', observer, +1, astroDate, 1);
-                // Search for sunset
-                const sunset = Astronomy.SearchRiseSet('Sun', observer, -1, astroDate, 1);
-                
-                return {
-                    sunrise: sunrise ? sunrise.date : null,
-                    sunset: sunset ? sunset.date : null
-                };
-            } catch (e) {
-                console.error('Error calculating sun times:', e);
-                return { sunrise: null, sunset: null };
-            }
         }
         
         // ==================== END ASTRONOMY ENGINE EPHEMERIS ====================
