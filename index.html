@@ -1114,8 +1114,8 @@
             else karanaIndex = (karanaNum - 1) % 7;
             
             // Day of week
-            const date = new Date(year, month - 1, day);
-            const dayOfWeek = date.getDay();
+            const dateForDay = new Date(year, month - 1, day);
+            const dayOfWeek = dateForDay.getDay();
             
             // Solar Tamil month (based on Sun's position)
             const solarMonthIndex = Math.floor(sunLong / 30) % 12;
