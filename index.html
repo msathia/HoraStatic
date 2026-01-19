@@ -1645,6 +1645,7 @@
 
         // Render the page
         function render() {
+            try {
             const loc = LOCATIONS[currentLocation];
             const now = new Date();
             const localDate = getDateInTimezone(now, loc.tz);
@@ -1654,8 +1655,15 @@
             // Get panchang for Tamil date display in header
             const panchangHeader = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
             
+            let tamilDateStr = '';
+            try {
+                tamilDateStr = `<br><span style="color: #fbbf24; font-weight: 500;">🗓️ ${panchangHeader.tamilMonth.solarMonth.tamil} ${panchangHeader.tamilMonth.tamilDate} (${panchangHeader.tamilMonth.solarMonth.english} ${panchangHeader.tamilMonth.tamilDate})</span>`;
+            } catch (e) {
+                console.log('Tamil date display error:', e);
+            }
+            
             document.getElementById('datetime-display').innerHTML = 
-                `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}<br><span style="color: #fbbf24; font-weight: 500;">🗓️ ${panchangHeader.tamilMonth.solarMonth.tamil} ${panchangHeader.tamilMonth.tamilDate} (${panchangHeader.tamilMonth.solarMonth.english} ${panchangHeader.tamilMonth.tamilDate})</span>`;
+                `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: loc.tz })} | 🕐 ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: loc.tz })}${tamilDateStr}`;
             
             // Calculate Hora schedule
             const data = calculateHoraSchedule(currentLocation);
@@ -1773,6 +1781,17 @@
             `;
             
             document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                console.error('Render error:', e);
+                document.getElementById('content').innerHTML = `
+                    <div style="background: #fee2e2; color: #991b1b; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3>Error loading Panchangam</h3>
+                        <p>Error: ${e.message}</p>
+                        <p>Please refresh the page or try again later.</p>
+                        <pre style="font-size: 0.8em; overflow: auto;">${e.stack}</pre>
+                    </div>
+                `;
+            }
         }
 
         function changeLocation() {
