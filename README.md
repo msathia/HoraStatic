@@ -1,20 +1,36 @@
-# 🕉️ Hora Calculator - Static Edition
+# 🕉️ பஞ்சாங்கம் - Panchangam
 
-A **100% client-side** Vedic Planetary Hours (Hora) calculator that runs entirely in your browser. No backend required!
+A **100% client-side** Vedic Panchangam (Hindu Calendar) and Hora calculator that runs entirely in your browser. No backend required!
 
 ## 🌟 Features
 
-- **Pure JavaScript** - All hora calculations done locally in browser
+- **Pure JavaScript** - All calculations done locally in browser
 - **No API Calls** - Works offline after initial load
 - **Multiple Locations** - 17+ cities worldwide (US, India, UK, Singapore, Australia)
-- **Accurate Calculations** - Uses astronomical formulas for sunrise/sunset
+- **Accurate Calculations** - Uses astronomical formulas with lunar/solar orbital mechanics
 - **Beautiful UI** - Modern, responsive design with dark theme
 - **Real-time Updates** - Auto-refreshes every minute
+- **Tamil & English** - Bilingual display for all elements
+
+### Panchangam Elements
+- **Tithi** - Lunar day with end times
+- **Nakshatra** - Lunar mansion with end times
+- **Yoga** - Sun-Moon combination
+- **Karana** - Half of Tithi
+- **Vara** - Day of week
+- **Tamil Date** - Solar calendar date
+- **Rahu Kalam** - Inauspicious time period
+
+### Additional Features
+- **Hora Calculator** - 24 planetary hours with auspiciousness indicators
+- **Lagna (Ascendant)** - Rising sign schedule throughout the day
+- **Jathaga Kattam** - South Indian style birth chart with planetary positions
+- **Sankalpam** - Traditional prayer invocation text
 - **Jupiter Hora Highlights** - Easily find the most auspicious times
 
 ## 🚀 Live Demo
 
-Visit: **https://msathia.github.io/HoraStatic/**
+Visit: **https://msathia.github.io/Panchangam/**
 
 ## 🏠 Host It Yourself
 
@@ -23,7 +39,7 @@ Visit: **https://msathia.github.io/HoraStatic/**
 1. Fork this repository
 2. Go to Settings → Pages
 3. Select "main" branch and save
-4. Your site will be live at `https://yourusername.github.io/HoraStatic/`
+4. Your site will be live at `https://yourusername.github.io/Panchangam/`
 
 ### Option 2: Any Static Hosting
 
@@ -33,7 +49,17 @@ Just upload `index.html` to:
 - Cloudflare Pages
 - Any web server
 
-## 📖 How Hora Works
+## 📖 How It Works
+
+### Panchangam Calculations
+
+The app calculates traditional Hindu calendar elements using:
+- **Tithi**: Angular distance between Moon and Sun (each tithi = 12°)
+- **Nakshatra**: Moon's position in the 27 lunar mansions (each = 13.33°)
+- **Yoga**: Sum of Sun and Moon longitudes (27 yogas, each = 13.33°)
+- **Karana**: Half of a tithi (60 karanas in a lunar month)
+
+### Hora System
 
 The Vedic hora system divides each day into 24 planetary hours:
 - **12 Day Horas** - From sunrise to sunset
@@ -56,14 +82,13 @@ Each hora is ruled by one of the seven classical planets:
 
 ## 🔧 Technical Details
 
-### Sunrise/Sunset Calculation
+### Astronomical Calculations
 
-Uses the standard astronomical formula based on:
-- Geographic latitude and longitude
-- Day of year
-- Solar declination angle
-
-The calculation is an approximation (typically within a few minutes of actual times).
+- **Sunrise/Sunset**: Standard astronomical formula with refraction correction
+- **Moon Position**: Lunar theory with equation of center, evection, variation, and annual equation
+- **Sun Position**: Solar theory with equation of center
+- **Ayanamsa**: Lahiri ayanamsa for sidereal (Vedic) coordinates
+- **Astronomy Engine**: Uses [astronomy-engine](https://github.com/cosinekitty/astronomy) for precise ephemeris when available
 
 ### Hora Sequence
 
@@ -122,9 +147,8 @@ MIT License - Use freely!
 
 ## 🙏 Credits
 
-Inspired by [Drik Panchang](https://www.drikpanchang.com/) for the hora reference data.
+Inspired by [Drik Panchang](https://www.drikpanchang.com/) for reference data and validation.
 
 ---
 
 **Note**: This is a static calculator using astronomical formulas. For religious/spiritual purposes, consult your local pandit or the original Drik Panchang website for exact times based on precise location-specific calculations.
-
