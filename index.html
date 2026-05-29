@@ -532,13 +532,15 @@
             { name: "Pisces", sanskrit: "Meena (मीन)", tamil: "மீனம்", symbol: "♓", ruler: "Jupiter", rulerTamil: "குரு", element: "water", quality: "Mutable" }
         ];
 
+        const ASTRONOMY_ENGINE_VERSION = "2.1.19";
+        const ASTRONOMY_ENGINE_SCRIPT = `https://cdn.jsdelivr.net/npm/astronomy-engine@${ASTRONOMY_ENGINE_VERSION}/astronomy.browser.min.js`;
+
         let currentLocation = "austin";
 
-        // Get timezone offset in hours for a given timezone
-        function getTimezoneOffset(timezone) {
-            const now = new Date();
-            const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+        // Get timezone offset in hours for a given timezone at a specific instant
+        function getTimezoneOffset(timezone, date = new Date()) {
+            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
             return (tzDate - utcDate) / (1000 * 60 * 60);
         }
 
@@ -555,15 +557,48 @@
                 hour: get('hour') === 24 ? 0 : get('hour'),
                 minute: get('minute'),
                 second: get('second'),
-                dayOfWeek: new Date(get('year'), get('month') - 1, get('day')).getDay()
+                dayOfWeek: new Date(Date.UTC(get('year'), get('month') - 1, get('day'))).getUTCDay()
             };
         }
 
-        // Calculate sunrise and sunset using astronomical formulas
+        // Create an absolute UTC Date for a local date/time in the selected location's timezone
+        function makeZonedDate(year, month, day, hour = 0, minute = 0, second = 0, timezone = LOCATIONS[currentLocation].tz) {
+            const utcMillis = Date.UTC(year, month - 1, day, hour, minute, second);
+            const firstGuess = new Date(utcMillis);
+            let offset = getTimezoneOffset(timezone, firstGuess);
+            let zonedDate = new Date(utcMillis - offset * 60 * 60 * 1000);
+            const correctedOffset = getTimezoneOffset(timezone, zonedDate);
+
+            if (correctedOffset !== offset) {
+                zonedDate = new Date(utcMillis - correctedOffset * 60 * 60 * 1000);
+            }
+
+            return zonedDate;
+        }
+
+        function addDaysToLocalDate(localDate, days, timezone) {
+            const zonedNoon = makeZonedDate(localDate.year, localDate.month, localDate.day + days, 12, 0, 0, timezone);
+            return getDateInTimezone(zonedNoon, timezone);
+        }
+
+        function dateToTimeObjInTimezone(date, timezone) {
+            const parts = getDateInTimezone(date, timezone);
+            let hour = parts.hour;
+            let minute = parts.minute + (parts.second >= 30 ? 1 : 0);
+
+            if (minute >= 60) {
+                minute -= 60;
+                hour = (hour + 1) % 24;
+            }
+
+            return { hour, minute };
+        }
+
+        // Calculate sunrise and sunset using fallback astronomical formulas
         function calculateSunTimes(lat, lng, year, month, day) {
             const rad = Math.PI / 180;
-            const date = new Date(year, month - 1, day);
-            const dayOfYear = Math.floor((date - new Date(year, 0, 0)) / 86400000);
+            const date = new Date(Date.UTC(year, month - 1, day));
+            const dayOfYear = Math.floor((date - new Date(Date.UTC(year, 0, 0))) / 86400000);
             
             // Solar declination
             const declination = -23.45 * Math.cos(rad * 360 / 365 * (dayOfYear + 10));
@@ -588,6 +623,50 @@
             return { sunrise: sunriseUTC, sunset: sunsetUTC };
         }
 
+        function calculateAstronomySunTimes(loc, localDate) {
+            if (!useAstronomyEngine || typeof Astronomy === 'undefined' || !Astronomy.Observer || !Astronomy.SearchRiseSet) {
+                return null;
+            }
+
+            try {
+                const observer = new Astronomy.Observer(loc.lat, loc.lng, 0);
+                const startOfDay = makeZonedDate(localDate.year, localDate.month, localDate.day, 0, 0, 0, loc.tz);
+                const sunBody = Astronomy.Body ? Astronomy.Body.Sun : 'Sun';
+                const sunriseEvent = Astronomy.SearchRiseSet(sunBody, observer, +1, startOfDay, 1);
+                const sunsetEvent = Astronomy.SearchRiseSet(sunBody, observer, -1, startOfDay, 1);
+
+                if (!sunriseEvent || !sunsetEvent) {
+                    return null;
+                }
+
+                return {
+                    sunrise: dateToTimeObjInTimezone(sunriseEvent.date, loc.tz),
+                    sunset: dateToTimeObjInTimezone(sunsetEvent.date, loc.tz),
+                    source: 'astronomy-engine'
+                };
+            } catch (e) {
+                console.error('Astronomy Engine sunrise/sunset error:', e);
+                return null;
+            }
+        }
+
+        function calculateLocalSunTimes(loc, localDate) {
+            const astronomyTimes = calculateAstronomySunTimes(loc, localDate);
+            if (astronomyTimes) {
+                return astronomyTimes;
+            }
+
+            const referenceDate = makeZonedDate(localDate.year, localDate.month, localDate.day, 12, 0, 0, loc.tz);
+            const tzOffset = getTimezoneOffset(loc.tz, referenceDate);
+            const sunTimes = calculateSunTimes(loc.lat, loc.lng, localDate.year, localDate.month, localDate.day);
+
+            return {
+                sunrise: utcHoursToLocalTime(sunTimes.sunrise, tzOffset),
+                sunset: utcHoursToLocalTime(sunTimes.sunset, tzOffset),
+                source: 'fallback'
+            };
+        }
+
         // Convert UTC hours to a time object {hour, minute} in local timezone
         function utcHoursToLocalTime(utcHours, tzOffset) {
             let localHours = utcHours + tzOffset;
@@ -595,8 +674,12 @@
             if (localHours >= 24) localHours -= 24;
             if (localHours < 0) localHours += 24;
             
-            const hour = Math.floor(localHours);
-            const minute = Math.round((localHours - hour) * 60);
+            let hour = Math.floor(localHours);
+            let minute = Math.round((localHours - hour) * 60);
+            if (minute >= 60) {
+                minute -= 60;
+                hour = (hour + 1) % 24;
+            }
             return { hour, minute };
         }
 
@@ -614,34 +697,37 @@
             return timeObj.hour * 60 + timeObj.minute;
         }
 
+        function minutesToTimeObj(totalMinutes) {
+            let normalized = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+            let hour = Math.floor(normalized / 60);
+            let minute = Math.round(normalized % 60);
+            if (minute >= 60) {
+                minute -= 60;
+                hour = (hour + 1) % 24;
+            }
+            return { hour, minute };
+        }
+
         // Add minutes to time object
         function addMinutesToTime(timeObj, minutes) {
-            let totalMinutes = timeObj.hour * 60 + timeObj.minute + minutes;
-            if (totalMinutes >= 24 * 60) totalMinutes -= 24 * 60;
-            if (totalMinutes < 0) totalMinutes += 24 * 60;
-            return {
-                hour: Math.floor(totalMinutes / 60),
-                minute: Math.round(totalMinutes % 60)
-            };
+            return minutesToTimeObj(timeObj.hour * 60 + timeObj.minute + minutes);
         }
 
         // Calculate hora schedule
         function calculateHoraSchedule(location) {
             const loc = LOCATIONS[location];
             const now = new Date();
-            const tzOffset = getTimezoneOffset(loc.tz);
             const localDate = getDateInTimezone(now, loc.tz);
             
             // Calculate sun times for today
-            const sunTimes = calculateSunTimes(loc.lat, loc.lng, localDate.year, localDate.month, localDate.day);
-            const sunrise = utcHoursToLocalTime(sunTimes.sunrise, tzOffset);
-            const sunset = utcHoursToLocalTime(sunTimes.sunset, tzOffset);
+            const sunTimes = calculateLocalSunTimes(loc, localDate);
+            const sunrise = sunTimes.sunrise;
+            const sunset = sunTimes.sunset;
             
             // Calculate sun times for tomorrow (for next sunrise)
-            const tomorrow = new Date(localDate.year, localDate.month - 1, localDate.day + 1);
-            const tomorrowParts = getDateInTimezone(tomorrow, loc.tz);
-            const nextSunTimes = calculateSunTimes(loc.lat, loc.lng, tomorrowParts.year, tomorrowParts.month, tomorrowParts.day);
-            const nextSunrise = utcHoursToLocalTime(nextSunTimes.sunrise, tzOffset);
+            const tomorrowParts = addDaysToLocalDate(localDate, 1, loc.tz);
+            const nextSunTimes = calculateLocalSunTimes(loc, tomorrowParts);
+            const nextSunrise = nextSunTimes.sunrise;
             
             // Day duration in minutes
             let dayDuration = timeObjToMinutes(sunset) - timeObjToMinutes(sunrise);
@@ -827,11 +913,15 @@
         // Calculate Lagna for a specific local time at a location
         function calculateLagnaAt(location, localHour, localMinute, localDate) {
             const loc = LOCATIONS[location];
-            const tzOffset = getTimezoneOffset(loc.tz);
-            
-            // Convert local time to UTC
-            const utcHour = localHour - tzOffset;
-            const jd = getJulianDayUTC(localDate.year, localDate.month, localDate.day, utcHour, localMinute, 0);
+            const date = makeZonedDate(localDate.year, localDate.month, localDate.day, localHour, localMinute, 0, loc.tz);
+            const jd = getJulianDayUTC(
+                date.getUTCFullYear(),
+                date.getUTCMonth() + 1,
+                date.getUTCDate(),
+                date.getUTCHours(),
+                date.getUTCMinutes(),
+                date.getUTCSeconds()
+            );
             
             const gmst = getGMST(jd);
             const lst = getLST(gmst, loc.lng);
@@ -858,7 +948,7 @@
             const lagnaEntries = [];
             
             // Check every 1 minute for Lagna changes (more accurate)
-            for (let mins = 0; mins <= 24 * 60; mins += 1) {
+            for (let mins = 0; mins < 24 * 60; mins += 1) {
                 const hour = Math.floor(mins / 60);
                 const minute = mins % 60;
                 const rashi = calculateLagnaAt(location, hour, minute, localDate);
@@ -1051,13 +1141,13 @@
         ];
         
         // Calculate Panchang details with ending times using Astronomy Engine
-        function calculatePanchang(year, month, day, hour, minute) {
+        function calculatePanchang(year, month, day, hour, minute, timezone = LOCATIONS[currentLocation].tz) {
             try {
-                // Create date object for the exact time
-                const date = new Date(year, month - 1, day, hour, minute);
+                // Create date object for the selected location's exact local time
+                const date = makeZonedDate(year, month, day, hour, minute, 0, timezone);
                 
                 // Get precise planetary positions
-                const planets = getAllPlanetaryPositions(year, month, day, hour, minute);
+                const planets = getAllPlanetaryPositions(year, month, day, hour, minute, timezone);
                 const sunLong = planets.surya ? planets.surya.longitude : 270;
                 const moonLong = planets.chandra ? planets.chandra.longitude : 270;
                 
@@ -1114,8 +1204,7 @@
             else karanaIndex = (karanaNum - 1) % 7;
             
             // Day of week
-            const dateForDay = new Date(year, month - 1, day);
-            const dayOfWeek = dateForDay.getDay();
+            const dayOfWeek = getDateInTimezone(makeZonedDate(year, month, day, 12, 0, 0, timezone), timezone).dayOfWeek;
             
             // Solar Tamil month (based on Sun's position)
             const solarMonthIndex = Math.floor(sunLong / 30) % 12;
@@ -1225,8 +1314,12 @@
                 totalMinutes += 24 * 60;
             }
             
-            const endHour = Math.floor(totalMinutes / 60);
-            const endMinute = Math.round(totalMinutes % 60);
+            let endHour = Math.floor(totalMinutes / 60);
+            let endMinute = Math.round(totalMinutes % 60);
+            if (endMinute >= 60) {
+                endMinute -= 60;
+                endHour = (endHour + 1) % 24;
+            }
             
             return formatTimeObj({ hour: endHour, minute: endMinute }) + dayOffset;
         }
@@ -1238,12 +1331,11 @@
         // Calculate Rahu Kalam time
         function calculateRahuKalam(location, localDate) {
             const loc = LOCATIONS[location];
-            const tzOffset = getTimezoneOffset(loc.tz);
             
             // Calculate sunrise and sunset
-            const sunTimes = calculateSunTimes(loc.lat, loc.lng, localDate.year, localDate.month, localDate.day);
-            const sunrise = utcHoursToLocalTime(sunTimes.sunrise, tzOffset);
-            const sunset = utcHoursToLocalTime(sunTimes.sunset, tzOffset);
+            const sunTimes = calculateLocalSunTimes(loc, localDate);
+            const sunrise = sunTimes.sunrise;
+            const sunset = sunTimes.sunset;
             
             // Day duration in minutes
             const sunriseMinutes = sunrise.hour * 60 + sunrise.minute;
@@ -1261,14 +1353,8 @@
             const rahuStartMinutes = sunriseMinutes + (rahuSegment * segmentDuration);
             const rahuEndMinutes = rahuStartMinutes + segmentDuration;
             
-            const rahuStart = {
-                hour: Math.floor(rahuStartMinutes / 60),
-                minute: Math.round(rahuStartMinutes % 60)
-            };
-            const rahuEnd = {
-                hour: Math.floor(rahuEndMinutes / 60),
-                minute: Math.round(rahuEndMinutes % 60)
-            };
+            const rahuStart = minutesToTimeObj(rahuStartMinutes);
+            const rahuEnd = minutesToTimeObj(rahuEndMinutes);
             
             return {
                 start: formatTimeObj(rahuStart),
@@ -1390,28 +1476,40 @@
 
         // ==================== ASTRONOMY ENGINE EPHEMERIS ====================
         
-        // Check if Astronomy Engine is loaded and working
         let useAstronomyEngine = false;
-        try {
-            if (typeof Astronomy !== 'undefined' && Astronomy.MakeTime) {
-                // Test if it works
+
+        // Check if Astronomy Engine is loaded and working
+        function verifyAstronomyEngine() {
+            try {
+                if (
+                    typeof Astronomy === 'undefined' ||
+                    !Astronomy.MakeTime ||
+                    !Astronomy.SunPosition ||
+                    !Astronomy.SearchRiseSet ||
+                    !Astronomy.Observer
+                ) {
+                    return false;
+                }
+
                 const testDate = Astronomy.MakeTime(new Date());
                 const testSun = Astronomy.SunPosition(testDate);
-                if (testSun && typeof testSun.elon === 'number') {
-                    useAstronomyEngine = true;
-                    console.log('Astronomy Engine loaded successfully');
-                }
+                return Boolean(testSun && typeof testSun.elon === 'number');
+            } catch (e) {
+                console.log('Astronomy Engine not available, using fallback calculations');
+                return false;
             }
-        } catch (e) {
-            console.log('Astronomy Engine not available, using fallback calculations');
-            useAstronomyEngine = false;
+        }
+
+        useAstronomyEngine = verifyAstronomyEngine();
+        if (useAstronomyEngine) {
+            console.log(`Astronomy Engine ${ASTRONOMY_ENGINE_VERSION} loaded successfully`);
         }
         
         // Get precise Lahiri Ayanamsa for a given date
         function getPreciseAyanamsa(date) {
             // Lahiri Ayanamsa: 23°51'11" on Jan 1, 2000 (23.853°)
             // Precession rate: ~50.29 arcseconds per year = 0.01397° per year
-            const j2000 = new Date(2000, 0, 1);
+            const j2000 = new Date(Date.UTC(2000, 0, 1, 0, 0, 0));
             const yearsDiff = (date - j2000) / (365.25 * 24 * 60 * 60 * 1000);
             return 23.853 + (yearsDiff * 0.01397);
         }
@@ -1428,10 +1526,12 @@
                     const sunPos = Astronomy.SunPosition(astroDate);
                     return sunPos.elon;
                 } else if (body === 'Moon') {
-                    // Use GeoMoon for the Moon
+                    // Use true ecliptic coordinates of date when available
+                    if (Astronomy.EclipticGeoMoon) {
+                        return Astronomy.EclipticGeoMoon(astroDate).lon;
+                    }
                     const moonVec = Astronomy.GeoMoon(astroDate);
-                    const ecl = Astronomy.Ecliptic(moonVec);
-                    return ecl.elon;
+                    return Astronomy.Ecliptic(moonVec).elon;
                 } else {
                     // For other planets, use HelioVector then convert
                     const geo = Astronomy.GeoVector(body, astroDate, true);
@@ -1551,7 +1651,7 @@
             
             // For other planets, use simple linear approximation from reference date
             // These return TROPICAL longitudes (ayanamsa gets subtracted in getAllPlanetaryPositions)
-            const refDate = new Date(2026, 1, 26, 12, 0, 0); // Feb 26, 2026 12:00 noon
+            const refDate = new Date(Date.UTC(2026, 1, 26, 12, 0, 0)); // Feb 26, 2026 12:00 UTC
             const daysDiff = (date - refDate) / (24 * 60 * 60 * 1000);
             const ayanamsa = getPreciseAyanamsa(refDate); // Ayanamsa at reference date
             
@@ -1590,8 +1690,8 @@
         }
         
         // Calculate all planetary positions using Astronomy Engine (Sidereal/Vedic)
-        function getAllPlanetaryPositions(year, month, day, hour = 12, minute = 0) {
-            const date = new Date(year, month - 1, day, hour, minute);
+        function getAllPlanetaryPositions(year, month, day, hour = 12, minute = 0, timezone = LOCATIONS[currentLocation].tz) {
+            const date = makeZonedDate(year, month, day, hour, minute, 0, timezone);
             const ayanamsa = getPreciseAyanamsa(date);
             
             const positions = {};
@@ -1627,7 +1727,7 @@
             }
             
             // Calculate Rahu/Ketu (lunar nodes) - use simple calculation
-            const refDate = new Date(2025, 11, 30);
+            const refDate = new Date(Date.UTC(2025, 11, 30));
             const daysDiff = (date - refDate) / (24 * 60 * 60 * 1000);
             let rahuLong = 318 - (daysDiff * 0.053); // Retrograde motion
             rahuLong = ((rahuLong % 360) + 360) % 360;
@@ -1660,8 +1760,8 @@
             const now = new Date();
             const localDate = getDateInTimezone(now, loc.tz);
             
-            // Get all planetary positions
-            const planets = getAllPlanetaryPositions(localDate.year, localDate.month, localDate.day);
+            // Get all planetary positions for the selected location's current local time
+            const planets = getAllPlanetaryPositions(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute, loc.tz);
             
             // Group planets by rashi
             const planetsByRashi = {};
@@ -1908,28 +2008,26 @@
         
         // Load Astronomy Engine asynchronously
         function loadAstronomyEngine() {
+            if (verifyAstronomyEngine()) {
+                useAstronomyEngine = true;
+                render();
+                return;
+            }
+
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js';
+            script.src = ASTRONOMY_ENGINE_SCRIPT;
             script.async = true;
             script.onload = function() {
-                console.log('Astronomy Engine loaded successfully');
-                // Update the flag and re-render with precise calculations
-                if (typeof Astronomy !== 'undefined') {
-                    try {
-                        const testDate = Astronomy.MakeTime(new Date());
-                        const testSun = Astronomy.SunPosition(testDate);
-                        if (testSun && typeof testSun.elon === 'number') {
-                            useAstronomyEngine = true;
-                            console.log('Astronomy Engine verified, re-rendering with precise ephemeris');
-                            render();
-                        }
-                    } catch (e) {
-                        console.log('Astronomy Engine test failed:', e);
-                    }
+                useAstronomyEngine = verifyAstronomyEngine();
+                if (useAstronomyEngine) {
+                    console.log(`Astronomy Engine ${ASTRONOMY_ENGINE_VERSION} verified, re-rendering with precise ephemeris`);
+                    render();
+                } else {
+                    console.log('Astronomy Engine test failed after script load');
                 }
             };
             script.onerror = function() {
-                console.log('Failed to load Astronomy Engine, using fallback calculations');
+                console.log(`Failed to load Astronomy Engine ${ASTRONOMY_ENGINE_VERSION}, using fallback calculations`);
             };
             document.body.appendChild(script);
         }
@@ -1939,4 +2037,3 @@
     </script>
 </body>
 </html>
-

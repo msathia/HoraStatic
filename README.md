@@ -84,11 +84,12 @@ Each hora is ruled by one of the seven classical planets:
 
 ### Astronomical Calculations
 
-- **Sunrise/Sunset**: Standard astronomical formula with refraction correction
+- **Sunrise/Sunset**: Astronomy Engine `SearchRiseSet` with atmospheric refraction when available; built-in formula fallback
 - **Moon Position**: Lunar theory with equation of center, evection, variation, and annual equation
 - **Sun Position**: Solar theory with equation of center
 - **Ayanamsa**: Lahiri ayanamsa for sidereal (Vedic) coordinates
-- **Astronomy Engine**: Uses [astronomy-engine](https://github.com/cosinekitty/astronomy) for precise ephemeris when available
+- **Astronomy Engine**: Uses pinned [astronomy-engine](https://github.com/cosinekitty/astronomy) `2.1.19` from jsDelivr for precise ephemeris when available
+- **Timezone Handling**: Converts each selected city's local date/time to UTC before ephemeris calls
 
 ### Hora Sequence
 
