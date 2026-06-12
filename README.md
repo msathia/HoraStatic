@@ -6,7 +6,7 @@ A **100% client-side** Vedic Panchangam (Hindu Calendar) and Hora calculator tha
 
 - **Pure JavaScript** - All calculations done locally in browser
 - **No API Calls** - Works offline after initial load
-- **Multiple Locations** - 17+ cities worldwide (US, India, UK, Singapore, Australia)
+- **Multiple Locations** - 18+ cities worldwide (US, India, UK, Singapore, Australia)
 - **Accurate Calculations** - Uses astronomical formulas with lunar/solar orbital mechanics
 - **Beautiful UI** - Modern, responsive design with dark theme
 - **Real-time Updates** - Auto-refreshes every minute
@@ -108,6 +108,7 @@ Subsequent horas follow the Chaldean order: Saturn → Jupiter → Mars → Sun 
 
 ### USA
 - Austin, TX
+- Cary, NC
 - Houston, TX
 - Dallas, TX
 - San Antonio, TX

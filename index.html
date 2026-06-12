@@ -438,6 +438,7 @@
             <label for="city-select">Select Location:</label>
             <select id="city-select" onchange="changeLocation()">
                 <option value="austin">Austin, TX</option>
+                <option value="cary">Cary, NC</option>
                 <option value="houston">Houston, TX</option>
                 <option value="dallas">Dallas, TX</option>
                 <option value="san_antonio">San Antonio, TX</option>
@@ -488,6 +489,7 @@
         // Location data with coordinates
         const LOCATIONS = {
             austin: { name: "Austin, TX", lat: 30.2672, lng: -97.7431, tz: "America/Chicago" },
+            cary: { name: "Cary, NC", lat: 35.7915, lng: -78.7811, tz: "America/New_York" },
             houston: { name: "Houston, TX", lat: 29.7604, lng: -95.3698, tz: "America/Chicago" },
             dallas: { name: "Dallas, TX", lat: 32.7767, lng: -96.7970, tz: "America/Chicago" },
             san_antonio: { name: "San Antonio, TX", lat: 29.4241, lng: -98.4936, tz: "America/Chicago" },
@@ -723,15 +725,29 @@
             const loc = LOCATIONS[location];
             const now = new Date();
             const localDate = getDateInTimezone(now, loc.tz);
+            const currentMinutes = localDate.hour * 60 + localDate.minute;
             
-            // Calculate sun times for today
-            const sunTimes = calculateLocalSunTimes(loc, localDate);
+            // Hora days run sunrise-to-sunrise. Before today's sunrise, the
+            // active hora cycle is still anchored to yesterday's sunrise.
+            const todaySunTimes = calculateLocalSunTimes(loc, localDate);
+            const todaySunriseMinutes = timeObjToMinutes(todaySunTimes.sunrise);
+            const horaDate = currentMinutes < todaySunriseMinutes
+                ? addDaysToLocalDate(localDate, -1, loc.tz)
+                : localDate;
+            
+            const sunTimes = horaDate === localDate
+                ? todaySunTimes
+                : calculateLocalSunTimes(loc, horaDate);
             const sunrise = sunTimes.sunrise;
             const sunset = sunTimes.sunset;
             
-            // Calculate sun times for tomorrow (for next sunrise)
-            const tomorrowParts = addDaysToLocalDate(localDate, 1, loc.tz);
-            const nextSunTimes = calculateLocalSunTimes(loc, tomorrowParts);
+            // Calculate sun times for the next local day (for next sunrise)
+            const nextDayParts = addDaysToLocalDate(horaDate, 1, loc.tz);
+            const nextSunTimes = nextDayParts.year === localDate.year &&
+                                 nextDayParts.month === localDate.month &&
+                                 nextDayParts.day === localDate.day
+                ? todaySunTimes
+                : calculateLocalSunTimes(loc, nextDayParts);
             const nextSunrise = nextSunTimes.sunrise;
             
             // Day duration in minutes
@@ -746,7 +762,7 @@
             const nightHoraDuration = nightDuration / 12;
             
             // Determine starting planet based on day of week
-            const dayOfWeek = localDate.dayOfWeek;
+            const dayOfWeek = horaDate.dayOfWeek;
             const dayRuler = DAY_RULERS[dayOfWeek];
             const startIndex = HORA_SEQUENCE.indexOf(dayRuler);
             
@@ -800,17 +816,19 @@
                 sunrise: formatTimeObj(sunrise),
                 sunset: formatTimeObj(sunset),
                 localDate: localDate,
+                horaDate: horaDate,
                 schedule
             };
         }
 
         // Find current hora
-        function findCurrentHora(schedule, localDate, sunset) {
+        function findCurrentHora(schedule, localDate) {
             let currentMinutes = localDate.hour * 60 + localDate.minute;
             
-            // If after sunset, add 24*60 for comparison
-            const sunsetMinutes = schedule.find(h => !h.isDay)?.startMinutes || 0;
-            if (currentMinutes < 6 * 60) { // If before 6 AM, it's probably night from previous day
+            // If before the schedule's sunrise anchor, compare against the
+            // overnight entries that continue after midnight.
+            const sunriseMinutes = schedule[0]?.startMinutes || 0;
+            if (currentMinutes < sunriseMinutes) {
                 currentMinutes += 24 * 60;
             }
             
@@ -1873,7 +1891,7 @@
             
             // Calculate Hora schedule
             const data = calculateHoraSchedule(currentLocation);
-            const { current, index, next } = findCurrentHora(data.schedule, data.localDate, data.sunset);
+            const { current, index, next } = findCurrentHora(data.schedule, data.localDate);
             
             // Calculate Lagna
             const lagnaSchedule = calculateLagnaSchedule(currentLocation);
