@@ -11,6 +11,7 @@ A **100% client-side** Vedic Panchangam (Hindu Calendar) and Hora calculator tha
 - **Beautiful UI** - Modern, responsive design with dark theme
 - **Real-time Updates** - Auto-refreshes every minute
 - **Tamil & English** - Bilingual display for all elements
+- **Three-Day Panchangam** - Yesterday, today, and tomorrow for the same selected city/time
 
 ### Panchangam Elements
 - **Tithi** - Lunar day with end times

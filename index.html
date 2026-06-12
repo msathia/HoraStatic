@@ -282,6 +282,101 @@
             text-align: center;
             font-size: 1.4em;
         }
+        .multi-day-panchang {
+            background: rgba(255,255,255,0.95);
+            color: #1a1a2e;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .multi-day-panchang h2 {
+            color: #0f766e;
+            margin-bottom: 6px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+        .multi-day-subtitle {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .panchang-days {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+        }
+        .panchang-day-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .panchang-day-card.today {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+        }
+        .panchang-day-card .day-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .panchang-day-card .day-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #0f766e;
+        }
+        .panchang-day-card .day-subtitle {
+            color: #64748b;
+            font-size: 0.82em;
+            margin-top: 2px;
+        }
+        .panchang-day-card .day-date {
+            color: #64748b;
+            font-size: 0.78em;
+            text-align: right;
+        }
+        .panchang-day-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .panchang-day-item {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .panchang-day-item.rahu-active {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        .panchang-day-item .label {
+            color: #64748b;
+            font-size: 0.72em;
+            margin-bottom: 3px;
+        }
+        .panchang-day-item .value-tamil {
+            color: #1a1a2e;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .panchang-day-item .value-english {
+            color: #475569;
+            font-size: 0.78em;
+            margin-top: 2px;
+        }
+        .panchang-day-item .end-time {
+            color: #b45309;
+            font-size: 0.72em;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        @media (max-width: 900px) {
+            .panchang-days { grid-template-columns: 1fr; }
+            .panchang-day-card .day-heading { align-items: flex-start; }
+        }
         .panchang-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -586,6 +681,19 @@
         function addDaysToLocalDate(localDate, days, timezone) {
             const zonedNoon = makeZonedDate(localDate.year, localDate.month, localDate.day + days, 12, 0, 0, timezone);
             return getDateInTimezone(zonedNoon, timezone);
+        }
+
+        function addDaysPreservingLocalTime(localDate, days, timezone) {
+            const shiftedDate = makeZonedDate(
+                localDate.year,
+                localDate.month,
+                localDate.day + days,
+                localDate.hour,
+                localDate.minute,
+                localDate.second,
+                timezone
+            );
+            return getDateInTimezone(shiftedDate, timezone);
         }
 
         function dateToTimeObjInTimezone(date, timezone) {
@@ -1395,12 +1503,114 @@
             return currentMinutes >= rahuKalam.startMinutes && currentMinutes < rahuKalam.endMinutes;
         }
 
+        function getPanchangDetails(localDate, location = currentLocation) {
+            const loc = LOCATIONS[location];
+            const panchang = calculatePanchang(
+                localDate.year,
+                localDate.month,
+                localDate.day,
+                localDate.hour,
+                localDate.minute,
+                loc.tz
+            );
+            const rahuKalam = calculateRahuKalam(location, localDate);
+            const isRahuAtTime = isRahuKalamNow(rahuKalam, localDate);
+
+            return { panchang, rahuKalam, isRahuAtTime, loc };
+        }
+
+        function formatPanchangDateLabel(localDate, timezone) {
+            const date = makeZonedDate(localDate.year, localDate.month, localDate.day, 12, 0, 0, timezone);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                timeZone: timezone
+            });
+        }
+
+        function generatePanchangDayCardHTML(dayInfo, location = currentLocation) {
+            const { panchang, rahuKalam, isRahuAtTime, loc } = getPanchangDetails(dayInfo.localDate, location);
+            const dateLabel = formatPanchangDateLabel(dayInfo.localDate, loc.tz);
+            const timeLabel = formatTimeObj({ hour: dayInfo.localDate.hour, minute: dayInfo.localDate.minute });
+            const rahuStatus = isRahuAtTime ? `Active at ${timeLabel}` : `Sunrise ${rahuKalam.sunrise} | Sunset ${rahuKalam.sunset}`;
+
+            return `
+                <div class="panchang-day-card ${dayInfo.offset === 0 ? 'today' : ''}">
+                    <div class="day-heading">
+                        <div>
+                            <div class="day-title">${dayInfo.title}</div>
+                            <div class="day-subtitle">${dayInfo.tamilTitle}</div>
+                        </div>
+                        <div class="day-date">${dateLabel}<br>${timeLabel}</div>
+                    </div>
+                    <div class="panchang-day-grid">
+                        <div class="panchang-day-item">
+                            <div class="label">கிழமை / Day</div>
+                            <div class="value-tamil">${panchang.day.tamil}</div>
+                            <div class="value-english">${panchang.day.english}</div>
+                        </div>
+                        <div class="panchang-day-item">
+                            <div class="label">திதி / Tithi</div>
+                            <div class="value-tamil">${panchang.tithi.pakshNameTamil}-${panchang.tithi.tamil}</div>
+                            <div class="value-english">${panchang.tithi.pakshaNameEnglish}-${panchang.tithi.english}</div>
+                            <div class="end-time">till ${panchang.tithi.endTime}</div>
+                        </div>
+                        <div class="panchang-day-item">
+                            <div class="label">நட்சத்திரம் / Nakshatra</div>
+                            <div class="value-tamil">${panchang.nakshatra.tamil}</div>
+                            <div class="value-english">${panchang.nakshatra.english}</div>
+                            <div class="end-time">till ${panchang.nakshatra.endTime}</div>
+                        </div>
+                        <div class="panchang-day-item">
+                            <div class="label">யோகம் / Yoga</div>
+                            <div class="value-tamil">${panchang.yoga.tamil}</div>
+                            <div class="value-english">${panchang.yoga.english}</div>
+                            <div class="end-time">till ${panchang.yoga.endTime}</div>
+                        </div>
+                        <div class="panchang-day-item">
+                            <div class="label">கரணம் / Karana</div>
+                            <div class="value-tamil">${panchang.karana.tamil}</div>
+                            <div class="value-english">${panchang.karana.english}</div>
+                        </div>
+                        <div class="panchang-day-item">
+                            <div class="label">தமிழ் தேதி / Tamil Date</div>
+                            <div class="value-tamil">${panchang.tamilMonth.solarMonth.tamil} ${panchang.tamilMonth.tamilDate}</div>
+                            <div class="value-english">${panchang.tamilMonth.solarMonth.english} ${panchang.tamilMonth.tamilDate}</div>
+                        </div>
+                        <div class="panchang-day-item ${isRahuAtTime ? 'rahu-active' : ''}">
+                            <div class="label">☊ ராகு காலம் / Rahu Kalam</div>
+                            <div class="value-tamil">${rahuKalam.start} - ${rahuKalam.end}</div>
+                            <div class="value-english">${rahuStatus}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMultiDayPanchangHTML(localDate, location = currentLocation) {
+            const loc = LOCATIONS[location];
+            const timeLabel = formatTimeObj({ hour: localDate.hour, minute: localDate.minute });
+            const days = [
+                { title: 'Yesterday', tamilTitle: 'நேற்று', offset: -1, localDate: addDaysPreservingLocalTime(localDate, -1, loc.tz) },
+                { title: 'Today', tamilTitle: 'இன்று', offset: 0, localDate },
+                { title: 'Tomorrow', tamilTitle: 'நாளை', offset: 1, localDate: addDaysPreservingLocalTime(localDate, 1, loc.tz) }
+            ];
+
+            return `
+                <div class="multi-day-panchang">
+                    <h2>📅 Three-Day Panchangam / மூன்று நாள் பஞ்சாங்கம்</h2>
+                    <div class="multi-day-subtitle">${loc.name} at ${timeLabel}</div>
+                    <div class="panchang-days">
+                        ${days.map(day => generatePanchangDayCardHTML(day, location)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         // Generate Panchang HTML
-        function generatePanchangHTML(localDate) {
-            const panchang = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
-            const rahuKalam = calculateRahuKalam(currentLocation, localDate);
-            const isRahuNow = isRahuKalamNow(rahuKalam, localDate);
-            const loc = LOCATIONS[currentLocation];
+        function generatePanchangHTML(localDate, location = currentLocation) {
+            const { panchang, rahuKalam, isRahuAtTime, loc } = getPanchangDetails(localDate, location);
             
             return `
                 <div class="sankalpam-box">
@@ -1468,10 +1678,10 @@
                         <div class="value-tamil">${panchang.tamilMonth.solarMonth.tamil} ${panchang.tamilMonth.tamilDate}</div>
                         <div class="value-english">${panchang.tamilMonth.solarMonth.english} ${panchang.tamilMonth.tamilDate}</div>
                     </div>
-                    <div class="panchang-item ${isRahuNow ? 'rahu-active' : ''}">
+                    <div class="panchang-item ${isRahuAtTime ? 'rahu-active' : ''}">
                         <div class="label">☊ ராகு காலம் / Rahu Kalam</div>
                         <div class="value-tamil">${rahuKalam.start} - ${rahuKalam.end}</div>
-                        <div class="value-english">${isRahuNow ? '⚠️ Active Now!' : `🌅 ${rahuKalam.sunrise} | 🌇 ${rahuKalam.sunset}`}</div>
+                        <div class="value-english">${isRahuAtTime ? '⚠️ Active Now!' : `🌅 ${rahuKalam.sunrise} | 🌇 ${rahuKalam.sunset}`}</div>
                     </div>
                     <div class="panchang-item">
                         <div class="label">சூரிய உதயம் / Sunrise</div>
@@ -1877,7 +2087,7 @@
             // Update header with proper timezone display
             document.getElementById('location-display').textContent = `📍 ${loc.name}`;
             // Get panchang for Tamil date display in header
-            const panchangHeader = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute);
+            const panchangHeader = calculatePanchang(localDate.year, localDate.month, localDate.day, localDate.hour, localDate.minute, loc.tz);
             
             let tamilDateStr = '';
             try {
@@ -1923,10 +2133,12 @@
                         ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} / ${nextLagna.tamil} (${nextLagna.start})</p>` : ''}
                     </div>
                 </div>
+
+                ${generateMultiDayPanchangHTML(localDate, currentLocation)}
                 
                 <div class="panchang-container">
                     <h2>📅 இன்றைய பஞ்சாங்கம் / Today's Panchang</h2>
-                    ${generatePanchangHTML(localDate)}
+                    ${generatePanchangHTML(localDate, currentLocation)}
                 </div>
                 
                 <div class="jupiter-box">
