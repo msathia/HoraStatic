@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -114,6 +115,16 @@
             border-radius: 15px;
             font-size: 0.9em;
         }
+        .top-panel-next {
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        .current-hora .top-panel-next {
+            color: #64748b;
+        }
+        .current-lagna .top-panel-next {
+            opacity: 0.85;
+        }
         
         .lagna-schedule {
             background: rgba(255,255,255,0.95);
@@ -139,6 +150,11 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 25px;
+        }
+        .dual-panel > .current-hora,
+        .dual-panel > .current-lagna {
+            margin-bottom: 0;
+            min-width: 0;
         }
         @media (max-width: 768px) {
             .dual-panel { grid-template-columns: 1fr; }
@@ -294,6 +310,12 @@
             margin-bottom: 6px;
             text-align: center;
             font-size: 1.4em;
+        }
+        .multi-day-panchang h2 span {
+            display: inline;
+        }
+        .multi-day-panchang h2 .tamil-title::before {
+            content: " / ";
         }
         .multi-day-subtitle {
             color: #64748b;
@@ -513,10 +535,119 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         
         @media (max-width: 600px) {
+            body { padding: 12px; }
+            .header {
+                padding: 22px 14px;
+                border-radius: 16px;
+                margin-bottom: 16px;
+            }
             .header h1 { font-size: 1.8em; }
-            .current-hora .planet { font-size: 2em; }
-            .current-hora .name { font-size: 1.4em; }
+            .header .subtitle { font-size: 0.9em; }
+            .header .location { font-size: 1.05em; }
+            .header .time { font-size: 0.88em; line-height: 1.5; }
+            .location-select {
+                padding: 14px;
+                margin-bottom: 16px;
+                gap: 10px;
+            }
+            .location-select select {
+                width: 100%;
+                min-width: 0;
+            }
+            .dual-panel {
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .current-hora,
+            .current-lagna {
+                padding: 18px 14px;
+                border-radius: 16px;
+                overflow: hidden;
+            }
+            .current-hora .planet,
+            .current-lagna .rashi-symbol {
+                font-size: 2em;
+                margin-bottom: 6px;
+            }
+            .current-hora .name,
+            .current-lagna .rashi-name {
+                font-size: 1.35em;
+                line-height: 1.25;
+            }
+            .current-hora .rashi-sanskrit,
+            .current-lagna .rashi-sanskrit,
+            .current-hora .time-range,
+            .current-lagna .time-range,
+            .current-lagna .element,
+            .top-panel-next {
+                overflow-wrap: anywhere;
+            }
+            .current-hora .time-range,
+            .current-lagna .time-range {
+                font-size: 1em;
+                margin: 8px 0;
+            }
+            .current-hora .quality {
+                padding: 7px 14px;
+                max-width: 100%;
+            }
+            .current-lagna .element {
+                display: block;
+                width: 100%;
+                padding: 8px 10px;
+                font-size: 0.85em;
+                line-height: 1.35;
+            }
+            .top-panel-next {
+                margin-top: 10px;
+                font-size: 0.86em;
+            }
+            .multi-day-panchang {
+                padding: 18px 14px;
+                border-radius: 16px;
+                margin-bottom: 16px;
+            }
+            .multi-day-panchang h2 {
+                font-size: 1.2em;
+                line-height: 1.3;
+                overflow-wrap: anywhere;
+            }
+            .multi-day-panchang h2 span {
+                display: block;
+            }
+            .multi-day-panchang h2 .tamil-title::before {
+                content: "";
+            }
+            .multi-day-subtitle {
+                font-size: 0.84em;
+                margin-bottom: 14px;
+            }
+            .panchang-day-card {
+                padding: 14px 12px;
+            }
+            .panchang-day-card .day-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .panchang-day-card .day-date {
+                text-align: left;
+                line-height: 1.35;
+            }
+            .panchang-day-item {
+                padding: 9px;
+            }
             th, td { padding: 8px; font-size: 0.9em; }
+        }
+        @media (max-width: 380px) {
+            .current-hora,
+            .current-lagna {
+                padding: 16px 12px;
+            }
+            .current-hora .name,
+            .current-lagna .rashi-name {
+                font-size: 1.25em;
+            }
         }
     </style>
 </head>
@@ -1599,7 +1730,7 @@
 
             return `
                 <div class="multi-day-panchang">
-                    <h2>📅 Three-Day Panchangam / மூன்று நாள் பஞ்சாங்கம்</h2>
+                    <h2><span>📅 Three-Day Panchangam</span><span class="tamil-title">மூன்று நாள் பஞ்சாங்கம்</span></h2>
                     <div class="multi-day-subtitle">${loc.name} at ${timeLabel}</div>
                     <div class="panchang-days">
                         ${days.map(day => generatePanchangDayCardHTML(day, location)).join('')}
@@ -2121,7 +2252,7 @@
                         <div class="rashi-sanskrit">${current.tamil} ஹோரை</div>
                         <div class="time-range">${current.start} - ${current.end}</div>
                         <div class="quality">${current.quality === 'good' ? '✅ Auspicious' : current.quality === 'avoid' ? '⚠️ Avoid' : '🔸 Neutral'}</div>
-                        ${next ? `<p style="margin-top: 15px; color: #64748b;">Next: ${next.emoji} ${next.planet} / ${next.tamil} (${next.start})</p>` : ''}
+                        ${next ? `<p class="top-panel-next">Next: ${next.emoji} ${next.planet} / ${next.tamil} (${next.start})</p>` : ''}
                     </div>
                     
                     <div class="current-lagna">
@@ -2130,7 +2261,7 @@
                         <div class="rashi-sanskrit">${currentLagna.tamil} லக்னம்</div>
                         <div class="time-range">${currentLagna.start} - ${currentLagna.end}</div>
                         <div class="element">${currentLagna.element.charAt(0).toUpperCase() + currentLagna.element.slice(1)} Sign • ${currentLagna.ruler} / ${currentLagna.rulerTamil}</div>
-                        ${nextLagna ? `<p style="margin-top: 15px; opacity: 0.85;">Next: ${nextLagna.symbol} ${nextLagna.name} / ${nextLagna.tamil} (${nextLagna.start})</p>` : ''}
+                        ${nextLagna ? `<p class="top-panel-next">Next: ${nextLagna.symbol} ${nextLagna.name} / ${nextLagna.tamil} (${nextLagna.start})</p>` : ''}
                     </div>
                 </div>
 
