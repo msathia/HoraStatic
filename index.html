@@ -1340,6 +1340,12 @@
             { tamil: 'சதுர்தசி', english: 'Chaturdashi' },
             { tamil: 'பூர்ணிமை', english: 'Purnima' } // or Amavasya for Krishna
         ];
+
+        const SANKALPAM_TITHIS = [
+            'ப்ரதமாயாம்', 'த்விதீயாயாம்', 'த்ருதீயாயாம்', 'சதுர்த்த்யாம்', 'பஞ்சம்யாம்',
+            'ஷஷ்ட்யாம்', 'சப்தம்யாம்', 'அஷ்டம்யாம்', 'நவம்யாம்', 'தசம்யாம்',
+            'ஏகாதச்யாம்', 'த்வாதச்யாம்', 'த்ரயோதச்யாம்', 'சதுர்தச்யாம்', 'பௌர்ணமாஸ்யாம்'
+        ];
         
         // 27 Nakshatras
         const NAKSHATRAS = [
@@ -1501,6 +1507,10 @@
             const tithiNum = Math.floor(tithiAngle / 12);
             const tithiIndex = tithiNum % 15;
             const paksha = tithiNum < 15 ? 'shukla' : 'krishna';
+            const isAmavasya = tithiNum === 29;
+            const tithi = isAmavasya
+                ? { tamil: 'அமாவாசை', english: 'Amavasya', sankalpamTamil: 'அமாவாஸ்யாம்' }
+                : { ...TITHIS[tithiIndex], sankalpamTamil: SANKALPAM_TITHIS[tithiIndex] };
             
             // Calculate Tithi ending time
             const tithiProgress = (tithiAngle % 12) / 12; // Progress within current tithi
@@ -1587,7 +1597,7 @@
             
             return {
                 tithi: {
-                    ...TITHIS[tithiIndex],
+                    ...tithi,
                     number: tithiIndex + 1,
                     pakshNameTamil: paksha === 'shukla' ? 'சுக்ல' : 'கிருஷ்ண',
                     pakshaNameEnglish: paksha === 'shukla' ? 'Shukla' : 'Krishna',
@@ -1625,7 +1635,7 @@
                 console.error('Error in calculatePanchang:', e);
                 // Return a minimal valid object to prevent page crash
                 return {
-                    tithi: { tamil: 'Error', english: 'Error', number: 1, pakshNameTamil: '', pakshaNameEnglish: '', endTime: '' },
+                    tithi: { tamil: 'Error', sankalpamTamil: 'Error', english: 'Error', number: 1, pakshNameTamil: '', pakshaNameEnglish: '', endTime: '' },
                     nakshatra: { tamil: 'Error', sankalpamTamil: 'Error', english: 'Error', endTime: '' },
                     yoga: { tamil: 'Error', english: 'Error', endTime: '' },
                     karana: { tamil: 'Error', english: 'Error' },
@@ -1826,21 +1836,21 @@
                     <div class="sankalpam-title">🙏 சங்கல்பம் / Sankalpam</div>
                     <div class="sankalpam-text">
                         <div class="sankalpam-invocation">மமோபாத்த சமஸ்த துரிதக்ஷயத்வார ஸ்ரீ பரமேஸ்வர ப்ரீத்யர்த்தம் சுபே சோபன முகூர்த்தே<br>
-                        ஆத்ய ப்ரஹ்மணே ஸ்வேதவராக கல்பே<br>
+                        ஸ்ரீ மஹாவிஷ்ணோராஜ்ஞயா ப்ரவர்த்தமானஸ்ய ஆத்ய ப்ரஹ்மணே த்விதீய பரார்த்தே ஸ்வேதவராக கல்பே<br>
                         வைவஸ்வத மன்வந்தரே<br>
                         அஷ்டாவிகும்சிதி கலியுகே ப்ரதமேபாதே <span class="highlight">${sankalpamLocation.geography}</span><br>
-                        <span class="highlight">${sankalpamLocation.city}</span> ஷஷ்டியாம் சம்வஸ்தரானாம்</div>
+                        <span class="highlight">${sankalpamLocation.city}</span> அஸ்மின் வர்த்தமானே வ்யாவஹாரிகே ப்ரபவாதீனாம் ஷஷ்டி ஸம்வத்ஸராணாம் மத்யே</div>
                         <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
                         <span class="highlight">${panchang.ayana.sankalpamTamil}</span>,
                         <span class="highlight">${panchang.ritu.sankalpamTamil}</span>,
                         <span class="highlight">${panchang.sankalpamSolarMasa.tamil} மாஸே</span>,
                         <span class="highlight">${panchang.paksha.sankalpamTamil}</span>,
-                        <span class="highlight">${panchang.tithi.pakshNameTamil} ${panchang.tithi.tamil}</span> திதௌ,
-                        <span class="highlight">${panchang.tamilMonth.sanskritVara}</span> வாஸரே,
-                        <span class="highlight">${panchang.nakshatra.sankalpamTamil}</span> நக்ஷத்ரே,
+                        <span class="highlight">${panchang.tithi.sankalpamTamil}</span> சுபதிதௌ,
+                        <span class="highlight">${panchang.tamilMonth.sanskritVara}</span> வாஸர யுக்தாயாம்,
+                        <span class="highlight">${panchang.nakshatra.sankalpamTamil}</span> நக்ஷத்ர யுக்தாயாம்,
                         <span class="highlight">${panchang.yoga.tamil}</span> யோகே,
                         <span class="highlight">${panchang.karana.tamil}</span> கரணே,
-                        ஏவங்குண விசேஷண விசிஷ்டாயாம் சுபதிதௌ.
+                        ஏவங்குண விசேஷண விசிஷ்டாயாம்.
                     </div>
                     <div class="sankalpam-english">
                         In the year <span class="highlight">${panchang.samvatsara}</span>,
