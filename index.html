@@ -448,6 +448,24 @@
         .sankalpam-invocation {
             margin-bottom: 15px;
         }
+        body.sankalpam-widget {
+            min-height: 0;
+            padding: 0;
+            background: transparent;
+        }
+        .sankalpam-widget .container {
+            max-width: none;
+            padding: 0;
+        }
+        .sankalpam-widget .header,
+        .sankalpam-widget .location-select,
+        .sankalpam-widget .legend,
+        .sankalpam-widget .footer {
+            display: none;
+        }
+        .sankalpam-widget .sankalpam-box {
+            margin: 0;
+        }
         .sankalpam-english {
             font-size: 0.85em;
             line-height: 1.8;
@@ -771,7 +789,15 @@
         const ASTRONOMY_ENGINE_VERSION = "2.1.19";
         const ASTRONOMY_ENGINE_SCRIPT = `https://cdn.jsdelivr.net/npm/astronomy-engine@${ASTRONOMY_ENGINE_VERSION}/astronomy.browser.min.js`;
 
-        let currentLocation = "austin";
+        const queryParams = new URLSearchParams(window.location.search);
+        const sankalpamWidgetMode = queryParams.get("view") === "sankalpam";
+        const requestedLocation = queryParams.get("location");
+        let currentLocation = LOCATIONS[requestedLocation] ? requestedLocation : "austin";
+
+        if (sankalpamWidgetMode) {
+            document.body.classList.add("sankalpam-widget");
+            document.title = "இன்றைய சங்கல்பம்";
+        }
 
         // Get timezone offset in hours for a given timezone at a specific instant
         function getTimezoneOffset(timezone, date = new Date()) {
@@ -2222,6 +2248,14 @@
             const loc = LOCATIONS[currentLocation];
             const now = new Date();
             const localDate = getDateInTimezone(now, loc.tz);
+
+            if (sankalpamWidgetMode) {
+                const content = document.getElementById('content');
+                content.innerHTML = generatePanchangHTML(localDate, currentLocation);
+                const sankalpam = content.querySelector('.sankalpam-box');
+                content.replaceChildren(sankalpam);
+                return;
+            }
             
             // Update header with proper timezone display
             document.getElementById('location-display').textContent = `📍 ${loc.name}`;
