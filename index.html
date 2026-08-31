@@ -755,6 +755,29 @@
             sydney: { name: "Sydney, Australia", lat: -33.8688, lng: 151.2093, tz: "Australia/Sydney" }
         };
 
+        // Local Sankalpam geography follows the customary regional formulations.
+        // Families should follow their acharya's wording if it differs.
+        const SANKALPAM_LOCATIONS = {
+            austin: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "டெக்சாஸ் ராஜ்யே ஆஸ்டின் நகரே" },
+            cary: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "வட கரோலினா ராஜ்யே கேரி நகரே" },
+            houston: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "டெக்சாஸ் ராஜ்யே ஹூஸ்டன் நகரே" },
+            dallas: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "டெக்சாஸ் ராஜ்யே டல்லஸ் நகரே" },
+            san_antonio: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "டெக்சாஸ் ராஜ்யே சான் அன்டோனியோ நகரே" },
+            new_york: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "நியூயார்க் ராஜ்யே நியூயார்க் நகரே" },
+            los_angeles: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "கலிபோர்னியா ராஜ்யே லாஸ் ஏஞ்சல்ஸ் நகரே" },
+            chicago: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "இலினாய்ஸ் ராஜ்யே சிகாகோ நகரே" },
+            san_francisco: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே ஐந்திர கண்டே மேரோ: பச்சிமே பார்ஷ்வே உத்தர அமரிக்க தேசே", city: "கலிபோர்னியா ராஜ்யே சான் பிரான்சிஸ்கோ நகரே" },
+            chennai: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "சென்னை நகரே" },
+            mumbai: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "மும்பை நகரே" },
+            bangalore: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "பெங்களூரு நகரே" },
+            delhi: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "தில்லி நகரே" },
+            hyderabad: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "ஹைதராபாத் நகரே" },
+            kolkata: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே மேரோ: தக்ஷிணே பார்ஷ்வே", city: "கொல்கத்தா நகரே" },
+            london: { geography: "சால்மலி த்வீபே ஐரோப்பிய கண்டே விந்த்யஸ்ய பச்சிமோத்தர திக்பாகே சமுத்ர மத்யஸ்தித ப்ருஹதாரண்ய க்ஷேத்ரே", city: "இங்கிலாந்து தேசே லண்டன் நகரே" },
+            singapore: { geography: "ஜம்பூ த்வீபே பரத வருஷே பரத கண்டே", city: "சிங்கப்பூர் தேசே சிங்கப்பூர் நகரே" },
+            sydney: { geography: "க்ரௌஞ்ச த்வீபே ரமணக வருஷே இந்திர கண்டே ரம்யக பச்சிம தேசே", city: "ஆஸ்திரேலியா தேசே சிட்னி நகரே" }
+        };
+
         // Planet data with Tamil names
         const PLANETS = {
             Sun: { emoji: "☀️", nature: "Vigorous", quality: "neutral", tamil: "சூரியன்" },
@@ -1771,6 +1794,7 @@
         // Generate Panchang HTML
         function generatePanchangHTML(localDate, location = currentLocation) {
             const { panchang, rahuKalam, isRahuAtTime, loc } = getPanchangDetails(localDate, location);
+            const sankalpamLocation = SANKALPAM_LOCATIONS[location];
             
             return `
                 <div class="sankalpam-box">
@@ -1779,8 +1803,8 @@
                         <div class="sankalpam-invocation">மமோபாத்த சமஸ்த துரிதக்ஷயத்வார ஸ்ரீ பரமேஸ்வர ப்ரீத்யர்த்தம் சுபே சோபன முகூர்த்தே<br>
                         ஆத்ய ப்ரஹ்மணே ஸ்வேதவராக கல்பே<br>
                         வைவஸ்வத மன்வந்தரே<br>
-                        அஷ்டாவிகும்சிதி கலியுகே ப்ரதமேபாதே ரமணஹவருஷே உத்தர அமரிக்க தேசே டெக்சாஸ் ராஜ்யே<br>
-                        ஆஸ்டின் நகரே ஷஷ்டியாம் சம்வஸ்தரானாம்</div>
+                        அஷ்டாவிகும்சிதி கலியுகே ப்ரதமேபாதே ${sankalpamLocation.geography}<br>
+                        ${sankalpamLocation.city} ஷஷ்டியாம் சம்வஸ்தரானாம்</div>
                         <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
                         <span class="highlight">${panchang.ayana.tamil}</span>,
                         <span class="highlight">${panchang.ritu.tamil}</span>,
