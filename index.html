@@ -1371,6 +1371,14 @@
             { tamil: 'உத்திரட்டாதி', english: 'Uttara Bhadrapada' },
             { tamil: 'ரேவதி', english: 'Revati' }
         ];
+
+        // Sanskrit recitation forms, written in Tamil script, for Sankalpam.
+        const SANKALPAM_NAKSHATRAS = [
+            'அச்வினீ', 'பரணீ', 'க்ருத்திகா', 'ரோஹிணீ', 'ம்ருகசிரா', 'ஆர்த்ரா', 'புனர்வஸூ',
+            'புஷ்ய', 'ஆச்லேஷா', 'மகா', 'பூர்வபல்குனீ', 'உத்தரபல்குனீ', 'ஹஸ்தா', 'சித்ரா',
+            'ஸ்வாதீ', 'விசாகா', 'அனுராதா', 'ஜ்யேஷ்டா', 'மூலா', 'பூர்வாஷாடா', 'உத்தராஷாடா',
+            'ச்ரவணா', 'ச்ரவிஷ்டா', 'சதபிஷக்', 'பூர்வப்ரோஷ்டபதா', 'உத்தரப்ரோஷ்டபதா', 'ரேவதீ'
+        ];
         
         // 27 Yogas
         const YOGAS = [
@@ -1418,6 +1426,16 @@
             { tamil: 'மாசி', english: 'Maasi', sanskrit: 'மாக', sanskritEng: 'Magha' },
             { tamil: 'பங்குனி', english: 'Panguni', sanskrit: 'பால்குன', sanskritEng: 'Phalguna' }
         ];
+
+        // Sankalpam uses the solar rāśi month, rather than the Tamil date and day number.
+        const SANKALPAM_SOLAR_MASAS = [
+            { tamil: 'மேஷ', english: 'Mesha' }, { tamil: 'ரிஷப', english: 'Rishabha' },
+            { tamil: 'மிதுன', english: 'Mithuna' }, { tamil: 'கடக', english: 'Kataka' },
+            { tamil: 'சிம்ம', english: 'Simha' }, { tamil: 'கன்னி', english: 'Kanya' },
+            { tamil: 'துலா', english: 'Tula' }, { tamil: 'வ்ருச்சிக', english: 'Vrischika' },
+            { tamil: 'தனு', english: 'Dhanu' }, { tamil: 'மகர', english: 'Makara' },
+            { tamil: 'கும்ப', english: 'Kumbha' }, { tamil: 'மீன', english: 'Meena' }
+        ];
         
         // Samvatsara (60-year cycle)
         const SAMVATSARAS = [
@@ -1431,12 +1449,12 @@
         
         // Ritu (Seasons)
         const RITUS = [
-            { tamil: 'வசந்த ருது', english: 'Vasanta (Spring)', months: [0, 1] },
-            { tamil: 'கிரீஷ்ம ருது', english: 'Greeshma (Summer)', months: [2, 3] },
-            { tamil: 'வர்ஷ ருது', english: 'Varsha (Monsoon)', months: [4, 5] },
-            { tamil: 'சரத் ருது', english: 'Sharad (Autumn)', months: [6, 7] },
-            { tamil: 'ஹேமந்த ருது', english: 'Hemanta (Pre-winter)', months: [8, 9] },
-            { tamil: 'சிசிர ருது', english: 'Shishira (Winter)', months: [10, 11] }
+            { tamil: 'வசந்த ருது', sankalpamTamil: 'வசந்த ருதௌ', english: 'Vasanta (Spring)', months: [0, 1] },
+            { tamil: 'கிரீஷ்ம ருது', sankalpamTamil: 'கிரீஷ்ம ருதௌ', english: 'Greeshma (Summer)', months: [2, 3] },
+            { tamil: 'வர்ஷ ருது', sankalpamTamil: 'வர்ஷ ருதௌ', english: 'Varsha (Monsoon)', months: [4, 5] },
+            { tamil: 'சரத் ருது', sankalpamTamil: 'சரத் ருதௌ', english: 'Sharad (Autumn)', months: [6, 7] },
+            { tamil: 'ஹேமந்த ருது', sankalpamTamil: 'ஹேமந்த ருதௌ', english: 'Hemanta (Pre-winter)', months: [8, 9] },
+            { tamil: 'சிசிர ருது', sankalpamTamil: 'சிசிர ருதௌ', english: 'Shishira (Winter)', months: [10, 11] }
         ];
 
         // 11 Karanas (7 repeat, 4 are fixed)
@@ -1577,6 +1595,7 @@
                 },
                 nakshatra: {
                     ...NAKSHATRAS[nakshatraIndex],
+                    sankalpamTamil: SANKALPAM_NAKSHATRAS[nakshatraIndex],
                     endTime: nakshatraEndTime
                 },
                 yoga: {
@@ -1586,6 +1605,7 @@
                 karana: KARANAS[karanaIndex],
                 paksha: {
                     tamil: paksha === 'shukla' ? 'சுக்ல பக்ஷம்' : 'கிருஷ்ண பக்ஷம்',
+                    sankalpamTamil: paksha === 'shukla' ? 'சுக்ல பக்ஷே' : 'கிருஷ்ண பக்ஷே',
                     english: paksha === 'shukla' ? 'Shukla Paksha' : 'Krishna Paksha'
                 },
                 day: {
@@ -1595,22 +1615,27 @@
                 tamilMonth: tamilMonth,
                 samvatsara: samvatsara,
                 ritu: ritu,
-                ayana: ayana
+                ayana: {
+                    ...ayana,
+                    sankalpamTamil: ayana.tamil === 'தக்ஷிணாயனம்' ? 'தக்ஷிணாயனே' : 'உத்தராயனே'
+                },
+                sankalpamSolarMasa: SANKALPAM_SOLAR_MASAS[solarMonthIndex]
             };
             } catch (e) {
                 console.error('Error in calculatePanchang:', e);
                 // Return a minimal valid object to prevent page crash
                 return {
                     tithi: { tamil: 'Error', english: 'Error', number: 1, pakshNameTamil: '', pakshaNameEnglish: '', endTime: '' },
-                    nakshatra: { tamil: 'Error', english: 'Error', endTime: '' },
+                    nakshatra: { tamil: 'Error', sankalpamTamil: 'Error', english: 'Error', endTime: '' },
                     yoga: { tamil: 'Error', english: 'Error', endTime: '' },
                     karana: { tamil: 'Error', english: 'Error' },
-                    paksha: { tamil: '', english: '' },
+                    paksha: { tamil: '', sankalpamTamil: '', english: '' },
                     day: { tamil: TAMIL_DAYS[new Date().getDay()], english: ENGLISH_DAYS[new Date().getDay()] },
                     tamilMonth: { tamil: '', english: '', solarMonth: { tamil: '', english: '' }, tamilDate: 0, sanskritVara: '', sanskritVaraEng: '' },
                     samvatsara: '',
-                    ritu: { tamil: '', english: '' },
-                    ayana: { tamil: '', english: '' }
+                    ritu: { tamil: '', sankalpamTamil: '', english: '' },
+                    ayana: { tamil: '', sankalpamTamil: '', english: '' },
+                    sankalpamSolarMasa: { tamil: '', english: '' }
                 };
             }
         }
@@ -1806,30 +1831,28 @@
                         அஷ்டாவிகும்சிதி கலியுகே ப்ரதமேபாதே <span class="highlight">${sankalpamLocation.geography}</span><br>
                         <span class="highlight">${sankalpamLocation.city}</span> ஷஷ்டியாம் சம்வஸ்தரானாம்</div>
                         <span class="highlight">${panchang.samvatsara}</span> நாம சம்வத்சரே,
-                        <span class="highlight">${panchang.ayana.tamil}</span>,
-                        <span class="highlight">${panchang.ritu.tamil}</span>,
-                        <span class="highlight">${panchang.tamilMonth.solarMonth.tamil} மாசம் ${panchang.tamilMonth.tamilDate} ஆம் நாள்</span>,
-                        <span class="highlight">${panchang.paksha.tamil}</span>,
+                        <span class="highlight">${panchang.ayana.sankalpamTamil}</span>,
+                        <span class="highlight">${panchang.ritu.sankalpamTamil}</span>,
+                        <span class="highlight">${panchang.sankalpamSolarMasa.tamil} மாஸே</span>,
+                        <span class="highlight">${panchang.paksha.sankalpamTamil}</span>,
                         <span class="highlight">${panchang.tithi.pakshNameTamil} ${panchang.tithi.tamil}</span> திதௌ,
                         <span class="highlight">${panchang.tamilMonth.sanskritVara}</span> வாஸரே,
-                        <span class="highlight">${panchang.nakshatra.tamil}</span> நக்ஷத்ரே,
+                        <span class="highlight">${panchang.nakshatra.sankalpamTamil}</span> நக்ஷத்ரே,
                         <span class="highlight">${panchang.yoga.tamil}</span> யோகே,
                         <span class="highlight">${panchang.karana.tamil}</span> கரணே,
-                        ஏவங்குண விசேஷண விசிஷ்டாயாம் சுபதிதௌ,
-                        <span class="highlight">${loc.name}</span> க்ஷேத்ரே...
+                        ஏவங்குண விசேஷண விசிஷ்டாயாம் சுபதிதௌ.
                     </div>
                     <div class="sankalpam-english">
                         In the year <span class="highlight">${panchang.samvatsara}</span>,
                         during <span class="highlight">${panchang.ayana.english}</span>,
                         in <span class="highlight">${panchang.ritu.english}</span>,
-                        <span class="highlight">${panchang.tamilMonth.solarMonth.english} ${panchang.tamilMonth.tamilDate}</span>,
+                        <span class="highlight">${panchang.sankalpamSolarMasa.english}</span> masa,
                         <span class="highlight">${panchang.paksha.english}</span>,
                         on <span class="highlight">${panchang.tithi.pakshaNameEnglish} ${panchang.tithi.english}</span>,
                         <span class="highlight">${panchang.tamilMonth.sanskritVaraEng}</span> Vasara,
                         star <span class="highlight">${panchang.nakshatra.english}</span>,
                         yoga <span class="highlight">${panchang.yoga.english}</span>,
-                        karana <span class="highlight">${panchang.karana.english}</span>,
-                        at <span class="highlight">${loc.name}</span>...
+                        karana <span class="highlight">${panchang.karana.english}</span>.
                     </div>
                 </div>
                 
